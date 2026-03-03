@@ -1,18 +1,18 @@
-CREATE TABLE gmail_inbox (
+CREATE TABLE email_content (
 
     id BIGSERIAL PRIMARY KEY,
 
     fk_gmail_mailbox_id BIGINT NOT NULL,
 
     -- vendor identifiers
-    message_id VARCHAR(128) NOT NULL,
-    thread_id VARCHAR(128) NOT NULL,
-    parent_message_id VARCHAR(128) DEFAULT NULL,
+    message_id VARCHAR(1024) NOT NULL,
+    thread_id VARCHAR(1024) NOT NULL,
+    parent_message_id VARCHAR(1024) DEFAULT NULL,
     raw_message TEXT,
 
     -- content
     subject TEXT,
-    from_address VARCHAR(255),
+    from_address TEXT,
     to_address TEXT,
     cc_address TEXT,
     body TEXT,
@@ -25,7 +25,7 @@ CREATE TABLE gmail_inbox (
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT fk_gmail_inbox_mailbox
+    CONSTRAINT fk_email_content_mailbox
         FOREIGN KEY (fk_gmail_mailbox_id)
         REFERENCES gmail_mailbox(id)
         ON DELETE CASCADE,
@@ -35,7 +35,7 @@ CREATE TABLE gmail_inbox (
 );
 
 
-CREATE INDEX idx_inbox_mailbox ON gmail_inbox (fk_gmail_mailbox_id);
-CREATE INDEX idx_inbox_thread ON gmail_inbox (thread_id);
-CREATE INDEX idx_inbox_parent ON gmail_inbox (parent_message_id);
+CREATE INDEX idx_inbox_mailbox ON email_content (fk_gmail_mailbox_id);
+CREATE INDEX idx_inbox_thread ON email_content (thread_id);
+CREATE INDEX idx_inbox_parent ON email_content (parent_message_id);
 

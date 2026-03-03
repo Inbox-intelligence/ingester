@@ -7,9 +7,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(
-        name = "gmail_attachment",
+        name = "email_attachment",
         indexes = {
-                @Index(name = "idx_inbox_attachment", columnList = "fk_gmail_inbox_id")
+                @Index(name = "idx_inbox_attachment", columnList = "fk_email_content_id")
         }
 )
 @Getter
@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GmailAttachment {
+public class EmailAttachment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,17 +29,17 @@ public class GmailAttachment {
      */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
-            name = "fk_gmail_inbox_id",
+            name = "fk_email_content_id",
             nullable = false,
-            foreignKey = @ForeignKey(name = "fk_gmail_gmail_attachment_inbox")
+            foreignKey = @ForeignKey(name = "fk_gmail_email_attachment_inbox")
     )
-    private GmailInbox gmailInbox;
+    private EmailContent emailContent;
 
     // Gmail metadata
-    @Column(name = "gmail_attachment_id", length = 255)
-    private String gmailAttachmentId;
+    @Column(name = "email_attachment_id", length = 1024)
+    private String emailAttachmentId;
 
-    @Column(name = "file_name", nullable = false, length = 500)
+    @Column(name = "file_name", nullable = false, length = 1024)
     private String fileName;
 
     @Column(name = "mime_type", length = 255)
@@ -49,10 +49,10 @@ public class GmailAttachment {
     private Long sizeInBytes;
 
     // Storage
-    @Column(name = "storage_path", nullable = false, length = 1000)
+    @Column(name = "storage_path", nullable = false, length = 1024)
     private String storagePath;
 
-    @Column(name = "storage_provider", nullable = false, length = 100)
+    @Column(name = "storage_provider", nullable = false, length = 8)
     @Builder.Default
     private String storageProvider = "S3";
 

@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(
-        name = "gmail_inbox",
+        name = "email_content",
         uniqueConstraints = {
                 @UniqueConstraint(
                         name = "uq_inbox_message",
@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GmailInbox {
+public class EmailContent {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,35 +35,32 @@ public class GmailInbox {
     private Long gmailMailboxId;
 
     // Vendor identifiers
-    @Column(name = "message_id", nullable = false, length = 128)
+    @Column(name = "message_id", nullable = false, length = 1024)
     private String messageId;
 
-    @Column(name = "thread_id", nullable = false, length = 128)
+    @Column(name = "thread_id", nullable = false, length = 1024)
     private String threadId;
 
-    @Column(name = "parent_message_id", length = 128)
+    @Column(name = "parent_message_id", length = 1024)
     private String parentMessageId;
 
-    @Lob
-    @Column(name = "raw_message")
+    @Column(name = "raw_message", columnDefinition = "TEXT")
     private String rawMessage;
 
     // Content
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String subject;
 
-    @Column(name = "from_address", length = 255)
+    @Column(name = "from_address", columnDefinition = "TEXT")
     private String fromAddress;
 
-    @Lob
-    @Column(name = "to_address")
+    @Column(name = "to_address", columnDefinition = "TEXT")
     private String toAddress;
 
-    @Lob
-    @Column(name = "cc_address")
+    @Column(name = "cc_address", columnDefinition = "TEXT")
     private String ccAddress;
 
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String body;
 
     @Column(name = "sent_at")

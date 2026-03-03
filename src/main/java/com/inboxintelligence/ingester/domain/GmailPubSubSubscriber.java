@@ -69,14 +69,7 @@ public class GmailPubSubSubscriber {
             }
 
             gmailMailbox = gmailMailboxOptional.get();
-
-            if (gmailMailbox.getHistoryId() > event.historyId()) {
-                log.info("Ignoring stale Gmail event");
-                consumer.ack();
-                return;
-            }
-
-            gmailSyncService.triggerSyncJob(gmailMailbox);
+            gmailSyncService.triggerSyncJob(gmailMailbox, event.historyId());
             consumer.ack();
 
         } catch (Exception e) {

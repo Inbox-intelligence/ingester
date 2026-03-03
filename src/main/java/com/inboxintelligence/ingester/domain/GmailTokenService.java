@@ -88,6 +88,7 @@ public class GmailTokenService {
         gmailMailbox.setHistoryId(watchResponse.getHistoryId().longValue());
         gmailMailbox.setWatchExpiresAt(watchResponse.getExpiration());
         gmailMailbox.setSyncStatus(SyncStatus.ACTIVE);
+        gmailMailbox.setLastSyncError(null);
 
         gmailMailboxService.save(gmailMailbox);
         log.info("Persisted Gmail mailbox entity for {}", email);
