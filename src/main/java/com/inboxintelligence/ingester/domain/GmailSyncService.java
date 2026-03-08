@@ -113,11 +113,11 @@ public class GmailSyncService {
     }
 
 
-    private ListHistoryResponse fetchHistory(Gmail gmail, GmailMailbox mailbox, String pageToken) {
+    private ListHistoryResponse fetchHistory(Gmail gmail, GmailMailbox mailbox, String pageToken) throws IOException {
 
         var request = gmail.users()
                 .history()
-                .list("me") // i think i should add retry there... correct???
+                .list("me")
                 .setStartHistoryId(BigInteger.valueOf(mailbox.getHistoryId()))
                 .setPageToken(pageToken);
 
@@ -219,11 +219,11 @@ public class GmailSyncService {
     }
 
 
-    private Message fetchMessage(Gmail gmail, String messageId) {
+    private Message fetchMessage(Gmail gmail, String messageId) throws IOException {
 
         var request = gmail.users()
                 .messages()
-                .get("me", messageId) // i think i should add retry there... correct???
+                .get("me", messageId)
                 .setFormat("full");
 
         return executeMessageRequest(request);
