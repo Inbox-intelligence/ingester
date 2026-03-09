@@ -63,6 +63,9 @@ public class EmailContent {
     @Column(columnDefinition = "TEXT")
     private String body;
 
+    @Column(name = "body_html", columnDefinition = "TEXT")
+    private String bodyHtml;
+
     @Column(name = "sent_at")
     private LocalDateTime sentAt;
 

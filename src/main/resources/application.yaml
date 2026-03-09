@@ -35,6 +35,9 @@ resilience4j:
           - com.google.api.client.googleapis.json.GoogleJsonResponseException
 
 
+attachment-storage:
+  base-path: ${ATTACHMENT_STORAGE_PATH:./data/attachments}
+
 gmail-api:
   application-name: "InboxIntelligence"
   client-id: ${GOOGLE_CLIENT_ID}

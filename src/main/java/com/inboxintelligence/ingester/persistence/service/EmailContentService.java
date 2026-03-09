@@ -17,7 +17,7 @@ public class EmailContentService {
         return repository.existsByGmailMailboxIdAndMessageId(id, messageId);
     }
 
-    public void save(EmailContent newEmail) {
-        repository.save(newEmail);
+    public EmailContent save(EmailContent newEmail) {
+        return repository.save(newEmail);
     }
 }

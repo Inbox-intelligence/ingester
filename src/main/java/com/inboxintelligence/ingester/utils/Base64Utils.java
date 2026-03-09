@@ -16,4 +16,12 @@ public class Base64Utils {
         byte[] decodedBytes = Base64.getUrlDecoder().decode(data);
         return new String(decodedBytes, StandardCharsets.UTF_8);
     }
+
+    public static byte[] decodeBase64Bytes(String data) {
+        if (data == null) {
+            return null;
+        }
+
+        return Base64.getUrlDecoder().decode(data);
+    }
 }
