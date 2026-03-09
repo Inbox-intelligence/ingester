@@ -38,3 +38,6 @@ out/
 
 ### ADC ###
 /inboxintelligence-01-714e2b66066c.json
+
+### Claude Code ###
+.claude/
