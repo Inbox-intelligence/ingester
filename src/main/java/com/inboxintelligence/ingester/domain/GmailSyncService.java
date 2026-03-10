@@ -171,18 +171,23 @@ public class GmailSyncService {
 
             log.info("Email received {}: {} <from:{}> <to:{}>", messageId, subject, from, to);
 
+            EmailContentStorageService.StoredEmailContentPaths contentPaths =
+                    gmailContentStorageService.storeEmailContent(
+                            mailbox.getId(), messageId,
+                            message.toPrettyString(), extracted.textBody(), extracted.htmlBody());
+
             EmailContent newEmail = EmailContent.builder()
                     .gmailMailboxId(mailbox.getId())
                     .messageId(message.getId())
                     .threadId(message.getThreadId())
                     .parentMessageId(gmailMimeContentExtractor.getHeader(message, "In-Reply-To"))
-                    .rawMessage(message.toPrettyString())
+                    .rawMessageStoragePath(contentPaths.rawMessageStoragePath())
                     .subject(subject)
                     .fromAddress(from)
                     .toAddress(to)
                     .ccAddress(cc)
-                    .body(extracted.textBody())
-                    .bodyHtml(extracted.htmlBody())
+                    .bodyStoragePath(contentPaths.bodyStoragePath())
+                    .bodyHtmlStoragePath(contentPaths.bodyHtmlStoragePath())
                     .sentAt(gmailMimeContentExtractor.parseInternalDate(message))
                     .receivedAt(gmailMimeContentExtractor.parseInternalDate(message))
                     .isProcessed(false)

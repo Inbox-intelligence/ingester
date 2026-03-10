@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -27,6 +28,12 @@ public class EmailContentStorageService {
     private final EmailAttachmentService emailAttachmentService;
     private final EmailContentStorageProperties emailContentStorageProperties;
 
+    public record StoredEmailContentPaths(
+            String rawMessageStoragePath,
+            String bodyStoragePath,
+            String bodyHtmlStoragePath
+    ) {}
+
     public record ResolvedAttachment(
             String fileName,
             String mimeType,
@@ -35,6 +42,40 @@ public class EmailContentStorageService {
             byte[] data,
             boolean isInline
     ) {}
+
+    public StoredEmailContentPaths storeEmailContent(Long mailboxId, String messageId,
+                                                       String rawMessage, String textBody, String htmlBody)
+            throws IOException {
+
+        Path dir = Path.of(emailContentStorageProperties.emailBodyPath(), String.valueOf(mailboxId), messageId);
+        Files.createDirectories(dir);
+
+        String rawPath = null;
+        String bodyPath = null;
+        String htmlPath = null;
+
+        if (rawMessage != null) {
+            Path p = dir.resolve("raw_message.json");
+            Files.writeString(p, rawMessage, StandardCharsets.UTF_8);
+            rawPath = p.toString();
+        }
+
+        if (textBody != null) {
+            Path p = dir.resolve("body.txt");
+            Files.writeString(p, textBody, StandardCharsets.UTF_8);
+            bodyPath = p.toString();
+        }
+
+        if (htmlBody != null) {
+            Path p = dir.resolve("body.html");
+            Files.writeString(p, htmlBody, StandardCharsets.UTF_8);
+            htmlPath = p.toString();
+        }
+
+        log.info("Email content stored for message {}", messageId);
+
+        return new StoredEmailContentPaths(rawPath, bodyPath, htmlPath);
+    }
 
     public void processAttachments(Long mailboxId, EmailContent savedEmail,
                                    String messageId, List<ResolvedAttachment> resolvedAttachments) {

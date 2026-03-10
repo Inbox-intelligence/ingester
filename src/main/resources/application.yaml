@@ -46,6 +46,7 @@ gmail-api:
 
 email-content-storage:
   attachment-path: ${ATTACHMENT_STORAGE_PATH:./data/email/attachments}
+  email-body-path: ${EMAIL_BODY_STORAGE_PATH:./data/email/bodies}
 
 
 

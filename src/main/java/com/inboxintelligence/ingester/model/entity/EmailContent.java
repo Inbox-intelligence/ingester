@@ -44,8 +44,8 @@ public class EmailContent {
     @Column(name = "parent_message_id", length = 1024)
     private String parentMessageId;
 
-    @Column(name = "raw_message", columnDefinition = "TEXT")
-    private String rawMessage;
+    @Column(name = "raw_message_storage_path", length = 1024)
+    private String rawMessageStoragePath;
 
     // Content
     @Column(columnDefinition = "TEXT")
@@ -60,11 +60,11 @@ public class EmailContent {
     @Column(name = "cc_address", columnDefinition = "TEXT")
     private String ccAddress;
 
-    @Column(columnDefinition = "TEXT")
-    private String body;
+    @Column(name = "body_storage_path", length = 1024)
+    private String bodyStoragePath;
 
-    @Column(name = "body_html", columnDefinition = "TEXT")
-    private String bodyHtml;
+    @Column(name = "body_html_storage_path", length = 1024)
+    private String bodyHtmlStoragePath;
 
     @Column(name = "sent_at")
     private LocalDateTime sentAt;
