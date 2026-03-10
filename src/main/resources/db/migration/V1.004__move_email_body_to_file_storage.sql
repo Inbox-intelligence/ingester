@@ -2,9 +2,9 @@
 -- The application now persists these as files and stores only the path.
 
 ALTER TABLE email_content
-    ADD COLUMN raw_message_storage_path VARCHAR(1024),
-    ADD COLUMN body_storage_path        VARCHAR(1024),
-    ADD COLUMN body_html_storage_path   VARCHAR(1024);
+    ADD COLUMN IF NOT EXISTS raw_message_storage_path VARCHAR(1024),
+    ADD COLUMN IF NOT EXISTS body_storage_path        VARCHAR(1024),
+    ADD COLUMN IF NOT EXISTS body_html_storage_path   VARCHAR(1024);
 
 ALTER TABLE email_content
     DROP COLUMN IF EXISTS raw_message,

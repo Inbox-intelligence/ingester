@@ -11,11 +11,14 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
         format_sql: true
+
+  flyway:
+    repair-on-migrate: true
 
   sql:
     init:
