@@ -56,6 +56,10 @@ public class EmailAttachment {
     @Builder.Default
     private String storageProvider = "LOCAL";
 
+    // Inline correlation — maps to cid: references in body HTML
+    @Column(name = "content_id", length = 1024)
+    private String contentId;
+
     // Processing
     @Column(name = "is_inline", nullable = false)
     @Builder.Default

@@ -6,5 +6,6 @@ public record ResolvedAttachment(
         String attachmentId,
         long sizeInBytes,
         byte[] data,
-        boolean isInline
+        boolean isInline,
+        String contentId
 ) {}

@@ -238,8 +238,10 @@ public class GmailSyncService {
                         ? part.getBody().getSize()
                         : data.length;
 
+                String contentId = getPartHeader(part, "Content-ID");
+
                 resolved.add(new ResolvedAttachment(
-                        fileName, part.getMimeType(), attachmentId, sizeInBytes, data, isInlinePart(part)));
+                        fileName, part.getMimeType(), attachmentId, sizeInBytes, data, isInlinePart(part), contentId));
 
             } catch (Exception e) {
                 log.error("Failed to fetch attachment '{}' for message {}: {}",
@@ -285,6 +287,21 @@ public class GmailSyncService {
         }
 
         return false;
+    }
+
+    private String getPartHeader(MessagePart part, String name) {
+
+        if (part.getHeaders() == null) {
+            return null;
+        }
+
+        for (MessagePartHeader header : part.getHeaders()) {
+            if (name.equalsIgnoreCase(header.getName())) {
+                return header.getValue();
+            }
+        }
+
+        return null;
     }
 
 

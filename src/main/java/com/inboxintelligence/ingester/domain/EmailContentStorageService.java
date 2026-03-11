@@ -71,6 +71,7 @@ public class EmailContentStorageService {
                 .sizeInBytes(resolved.sizeInBytes())
                 .storagePath(storagePath.toString())
                 .storageProvider(provider.providerName())
+                .contentId(resolved.contentId())
                 .isInline(resolved.isInline())
                 .isProcessed(false)
                 .build();
