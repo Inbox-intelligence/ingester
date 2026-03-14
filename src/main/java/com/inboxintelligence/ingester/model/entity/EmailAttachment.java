@@ -23,10 +23,6 @@ public class EmailAttachment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /*
-     * Foreign Key Mapping
-     * ON DELETE CASCADE handled at DB level
-     */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
             name = "fk_email_content_id",
@@ -35,7 +31,6 @@ public class EmailAttachment {
     )
     private EmailContent emailContent;
 
-    // Gmail metadata
     @Column(name = "email_attachment_id", length = 1024)
     private String emailAttachmentId;
 
@@ -48,7 +43,6 @@ public class EmailAttachment {
     @Column(name = "size_in_bytes")
     private Long sizeInBytes;
 
-    // Storage
     @Column(name = "storage_path", nullable = false, length = 1024)
     private String storagePath;
 
@@ -56,11 +50,9 @@ public class EmailAttachment {
     @Builder.Default
     private String storageProvider = "LOCAL";
 
-    // Inline correlation — maps to cid: references in body HTML
     @Column(name = "content_id", length = 1024)
     private String contentId;
 
-    // Processing
     @Column(name = "is_inline", nullable = false)
     @Builder.Default
     private Boolean isInline = false;
@@ -69,7 +61,6 @@ public class EmailAttachment {
     @Builder.Default
     private Boolean isProcessed = false;
 
-    // Audit
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();

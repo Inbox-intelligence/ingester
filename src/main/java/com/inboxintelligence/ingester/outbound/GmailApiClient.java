@@ -12,14 +12,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
 
-/**
- * Low-level Gmail API client.
- * <p>
- * Every public method here is a single Gmail API call wrapped with
- * resilience4j {@code @Retry} so transient 429/5xx errors are retried
- * automatically.  Methods are public so Spring AOP can proxy them —
- * the original private-method annotations were silently ignored.
- */
+/** Low-level Gmail API client with resilience4j retry for transient errors. */
 @Component
 @Slf4j
 public class GmailApiClient {

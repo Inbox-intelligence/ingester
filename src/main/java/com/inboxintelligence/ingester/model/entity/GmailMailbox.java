@@ -19,12 +19,8 @@ public class GmailMailbox {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /* ---------- identity ---------- */
-
     @Column(name = "email_address", nullable = false, unique = true)
     private String emailAddress;
-
-    /* ---------- OAuth (Gmail-specific) ---------- */
 
     @Column(name = "access_token")
     private String accessToken;
@@ -35,15 +31,11 @@ public class GmailMailbox {
     @Column(name = "access_token_expires_at")
     private Instant accessTokenExpiresAt;
 
-    /* ---------- Gmail sync ---------- */
-
     @Column(name = "history_id", nullable = false)
     private Long historyId;
 
     @Column(name = "watch_expires_at")
     private Long watchExpiresAt;
-
-    /* ---------- system-level (temporary, phase-1) ---------- */
 
     @Enumerated(EnumType.STRING)
     @Column(name = "sync_status", nullable = false)
@@ -55,15 +47,11 @@ public class GmailMailbox {
     @Column(name = "last_sync_error")
     private String lastSyncError;
 
-    /* ---------- audit ---------- */
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt = Instant.now();
-
-    /* ---------- lifecycle ---------- */
 
     @PreUpdate
     protected void onUpdate() {

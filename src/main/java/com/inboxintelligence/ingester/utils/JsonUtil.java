@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class JsonUtils {
+public class JsonUtil {
 
     private static final ObjectMapper objectMapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
 

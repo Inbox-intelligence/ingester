@@ -4,6 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "email-storage")
 public record EmailStorageProperties(
-        String provider
+        String provider,
+        String localBasePath
 ) {
 }

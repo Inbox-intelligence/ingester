@@ -17,9 +17,6 @@ spring:
       hibernate:
         format_sql: true
 
-  flyway:
-    clean-disabled: false
-
   sql:
     init:
       mode: never
@@ -49,11 +46,8 @@ gmail-api:
 
 email-storage:
   provider: ${EMAIL_STORAGE_PROVIDER:LOCAL}
-  local:
-    base-path: ${EMAIL_STORAGE_LOCAL_BASE_PATH:./data}
-  s3:
-    bucket: ${EMAIL_STORAGE_S3_BUCKET:}
-    prefix: ${EMAIL_STORAGE_S3_PREFIX:}
+  local-base-path: ${EMAIL_STORAGE_LOCAL_BASE_PATH:./data}
+
 
 
 

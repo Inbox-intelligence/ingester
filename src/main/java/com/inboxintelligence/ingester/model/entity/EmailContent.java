@@ -34,7 +34,6 @@ public class EmailContent {
     @Column(name = "fk_gmail_mailbox_id", nullable = false)
     private Long gmailMailboxId;
 
-    // Vendor identifiers
     @Column(name = "message_id", nullable = false, length = 1024)
     private String messageId;
 
@@ -44,7 +43,6 @@ public class EmailContent {
     @Column(name = "parent_message_id", length = 1024)
     private String parentMessageId;
 
-    // Content
     @Column(columnDefinition = "TEXT")
     private String subject;
 
@@ -57,7 +55,6 @@ public class EmailContent {
     @Column(name = "cc_address", columnDefinition = "TEXT")
     private String ccAddress;
 
-    // Storage paths (file content stored on disk, not in DB)
     @Column(name = "raw_message_path", length = 1024)
     private String rawMessagePath;
 

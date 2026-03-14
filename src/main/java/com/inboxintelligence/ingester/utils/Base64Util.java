@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 @UtilityClass
-public class Base64Utils {
+public class Base64Util {
 
     public static String decodeBase64String(String data) {
         if (data == null) {
