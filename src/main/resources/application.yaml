@@ -21,6 +21,12 @@ spring:
     init:
       mode: never
 
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+
 resilience4j:
   retry:
     instances:
@@ -43,6 +49,11 @@ gmail-api:
   pubsub-topic: "projects/inboxintelligence-01/topics/gmail-events"
   project-id: "inboxintelligence-01"
   pubsub-subscription-id: "gmail-events-sub"
+
+rabbitmq:
+  exchange: email-events
+  queue: email-processed
+  routing-key: email.processed
 
 email-storage:
   provider: ${EMAIL_STORAGE_PROVIDER:LOCAL}

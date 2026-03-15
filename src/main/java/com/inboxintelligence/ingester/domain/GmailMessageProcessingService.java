@@ -8,6 +8,7 @@ import com.google.api.services.gmail.model.MessagePartHeader;
 import com.inboxintelligence.ingester.model.ProcessedStatus;
 import com.inboxintelligence.ingester.model.entity.EmailAttachment;
 import com.inboxintelligence.ingester.model.entity.EmailContent;
+import com.inboxintelligence.ingester.outbound.EmailEventPublisher;
 import com.inboxintelligence.ingester.outbound.GmailApiClient;
 import com.inboxintelligence.ingester.persistence.service.EmailAttachmentService;
 import com.inboxintelligence.ingester.persistence.service.EmailContentService;
@@ -35,32 +36,30 @@ public class GmailMessageProcessingService {
     private final EmailContentService emailContentService;
     private final EmailAttachmentService emailAttachmentService;
     private final EmailStorageProviderFactory storageProviderFactory;
+    private final EmailEventPublisher emailEventPublisher;
 
     public void process(Gmail gmail, Long mailboxId, Message message) {
 
         try {
+            log.debug("Processing message {} for mailbox {}", message.getId(), mailboxId);
 
-            String messageId = message.getId();
-            log.debug("Processing message {} for mailbox {}", messageId, mailboxId);
-
-            MessagePart messagePartPayload = message.getPayload();
-            Instant messageDate = MimeContentUtil.parseInternalDate(message);
-
-            var savedEmail = saveEmailContentEntity(mailboxId, message, messageId, messageDate);
-
-            saveEmailContentInStorage(mailboxId, message, savedEmail, messageId, messagePartPayload);
-
-            saveEmailAttachment(gmail, mailboxId, messagePartPayload, savedEmail, messageId);
-
+            var savedEmail = saveEmailContentEntity(mailboxId, message);
+            saveEmailContentInStorage(mailboxId, message, savedEmail);
+            saveEmailAttachment(gmail, mailboxId, message, savedEmail);
+            emailEventPublisher.publishEmailProcessed(savedEmail.getId());
         } catch (Exception e) {
             log.error("Failed to process message {} for mailbox {}", message.getId(), mailboxId, e);
             throw new RuntimeException(e);
         }
     }
 
-    private EmailContent saveEmailContentEntity(Long mailboxId, Message message, String messageId, Instant messageDate) {
+    private EmailContent saveEmailContentEntity(Long mailboxId, Message message) {
 
         // Step 1: Save email metadata to DB with status RECEIVED
+
+        String messageId = message.getId();
+        Instant messageDate = MimeContentUtil.parseInternalDate(message);
+
         var emailContent = EmailContent.builder()
                 .gmailMailboxId(mailboxId)
                 .messageId(messageId)
@@ -81,30 +80,41 @@ public class GmailMessageProcessingService {
 
     }
 
-    private void saveEmailContentInStorage(Long mailboxId, Message message, EmailContent savedEmail, String messageId, MessagePart messagePartPayload) throws IOException {
+    private void saveEmailContentInStorage(Long mailboxId, Message message, EmailContent savedEmail) throws IOException {
 
         // Step 2: Store content to storage and update paths + status CONTENT_SAVED
+
+        String messageId = message.getId();
+        MessagePart messagePartPayload = message.getPayload();
+
         var provider = storageProviderFactory.getProvider();
         savedEmail.setRawMessagePath(provider.storeRawMessage(mailboxId, messageId, message.toPrettyString()));
         savedEmail.setBodyContentPath(provider.storeTextBody(mailboxId, messageId, MimeContentUtil.extractTextBody(messagePartPayload)));
         savedEmail.setBodyHtmlContentPath(provider.storeHtmlBody(mailboxId, messageId, MimeContentUtil.extractHtmlBody(messagePartPayload)));
-        savedEmail.setProcessedStatus(ProcessedStatus.CONTENT_SAVED);
 
+        savedEmail.setProcessedStatus(ProcessedStatus.CONTENT_SAVED);
         emailContentService.save(savedEmail);
+
         log.info("Content saved for message {}", messageId);
 
     }
 
 
-    private void saveEmailAttachment(Gmail gmail, Long mailboxId, MessagePart messagePartPayload, EmailContent savedEmail, String messageId) {
+    private void saveEmailAttachment(Gmail gmail, Long mailboxId, Message message, EmailContent savedEmail) {
 
         // Step 3: Process attachments and update status to ATTACHMENT_SAVED
+
+        String messageId = message.getId();
+        MessagePart messagePartPayload = message.getPayload();
+
         var list = MimeContentUtil.extractAttachmentMessageParts(messagePartPayload);
         log.debug("Found {} attachments for message {}", list.size(), messageId);
-        list.forEach(part -> processAttachmentMessageParts(gmail, savedEmail, mailboxId, messageId, part));
-        savedEmail.setProcessedStatus(ProcessedStatus.ATTACHMENT_SAVED);
 
+        list.forEach(part -> processAttachmentMessageParts(gmail, savedEmail, mailboxId, messageId, part));
+
+        savedEmail.setProcessedStatus(ProcessedStatus.ATTACHMENT_SAVED);
         emailContentService.save(savedEmail);
+
         log.info("Attachments saved for message {}", messageId);
     }
 
@@ -120,9 +130,7 @@ public class GmailMessageProcessingService {
                 String fileName = StringUtils.hasText(part.getFilename()) ? part.getFilename() : "unnamed_" + System.currentTimeMillis();
                 String storagePath = provider.storeAttachment(mailboxId, messageId, fileName, data);
                 saveEmailAttachmentEntity(savedEmail, part, fileName, storagePath, data.length, provider.providerName());
-
             }
-
         } catch (Exception e) {
             log.warn("Failed to process attachment '{}' for message {}: {}", part.getFilename(), messageId, e.getMessage());
         }
@@ -143,8 +151,10 @@ public class GmailMessageProcessingService {
         }
 
         if (StringUtils.hasText(body.getAttachmentId())) {
+
             log.debug("Fetching remote attachment '{}' (attachmentId={}) for message {}", part.getFilename(), body.getAttachmentId(), messageId);
             MessagePartBody attachmentBody = gmailApiClient.fetchAttachment(gmail, messageId, body.getAttachmentId());
+
             if (attachmentBody != null && StringUtils.hasText(attachmentBody.getData())) {
                 return decodeBase64Bytes(attachmentBody.getData());
             }
