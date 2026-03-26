@@ -17,19 +17,19 @@ public class RabbitMQConfig {
     private final RabbitMQProperties properties;
 
     @Bean
-    public Queue emailProcessedQueue() {
+    public Queue emailOutboundQueue() {
         return new Queue(properties.queue(), true);
     }
 
     @Bean
-    public TopicExchange emailEventsExchange() {
+    public TopicExchange emailOutboundExchange() {
         return new TopicExchange(properties.exchange());
     }
 
     @Bean
-    public Binding emailProcessedBinding(Queue emailProcessedQueue, TopicExchange emailEventsExchange) {
-        return BindingBuilder.bind(emailProcessedQueue)
-                .to(emailEventsExchange)
+    public Binding emailOutboundBinding(Queue emailOutboundQueue, TopicExchange emailOutboundExchange) {
+        return BindingBuilder.bind(emailOutboundQueue)
+                .to(emailOutboundExchange)
                 .with(properties.routingKey());
     }
 
