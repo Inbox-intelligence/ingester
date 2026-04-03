@@ -9,8 +9,8 @@ import com.google.pubsub.v1.PubsubMessage;
 import com.inboxintelligence.ingester.config.GmailApiProperties;
 import com.inboxintelligence.ingester.domain.GmailSyncService;
 import com.inboxintelligence.ingester.model.GmailEvent;
-import com.inboxintelligence.ingester.model.entity.GmailMailbox;
-import com.inboxintelligence.ingester.persistence.service.GmailMailboxService;
+import com.inboxintelligence.persistence.model.entity.GmailMailbox;
+import com.inboxintelligence.persistence.service.GmailMailboxService;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import static com.inboxintelligence.ingester.model.SyncStatus.DISCONNECTED;
+import static com.inboxintelligence.persistence.model.SyncStatus.DISCONNECTED;
 
 /**
  * Listens on Google Cloud Pub/Sub for Gmail push notifications and triggers mailbox sync.

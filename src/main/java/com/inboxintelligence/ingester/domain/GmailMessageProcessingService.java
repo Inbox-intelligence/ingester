@@ -5,21 +5,23 @@ import com.google.api.services.gmail.model.Message;
 import com.google.api.services.gmail.model.MessagePart;
 import com.google.api.services.gmail.model.MessagePartBody;
 import com.google.api.services.gmail.model.MessagePartHeader;
-import com.inboxintelligence.ingester.model.ProcessedStatus;
-import com.inboxintelligence.ingester.model.entity.EmailAttachment;
-import com.inboxintelligence.ingester.model.entity.EmailContent;
+import com.inboxintelligence.persistence.config.EmailStorageProperties;
+import com.inboxintelligence.persistence.model.ProcessedStatus;
+import com.inboxintelligence.persistence.model.entity.EmailAttachment;
+import com.inboxintelligence.persistence.model.entity.EmailContent;
+import com.inboxintelligence.persistence.service.EmailAttachmentService;
+import com.inboxintelligence.persistence.service.EmailContentService;
+import com.inboxintelligence.persistence.storage.EmailStorageProvider;
+import com.inboxintelligence.persistence.storage.EmailStorageProviderFactory;
 import com.inboxintelligence.ingester.outbound.EmailEventPublisher;
 import com.inboxintelligence.ingester.outbound.GmailApiClient;
-import com.inboxintelligence.ingester.persistence.service.EmailAttachmentService;
-import com.inboxintelligence.ingester.persistence.service.EmailContentService;
-import com.inboxintelligence.ingester.persistence.storage.EmailStorageProvider;
-import com.inboxintelligence.ingester.persistence.storage.EmailStorageProviderFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.time.Instant;
 
 import static com.inboxintelligence.ingester.utils.Base64Util.decodeBase64Bytes;
@@ -36,6 +38,7 @@ public class GmailMessageProcessingService {
     private final EmailContentService emailContentService;
     private final EmailAttachmentService emailAttachmentService;
     private final EmailStorageProviderFactory storageProviderFactory;
+    private final EmailStorageProperties emailStorageProperties;
     private final EmailEventPublisher emailEventPublisher;
 
     public void process(Gmail gmail, Long mailboxId, Message message) {
@@ -88,9 +91,11 @@ public class GmailMessageProcessingService {
         MessagePart messagePartPayload = message.getPayload();
 
         var provider = storageProviderFactory.getProvider();
-        savedEmail.setRawMessagePath(provider.storeRawMessage(mailboxId, messageId, message.toPrettyString()));
-        savedEmail.setBodyContentPath(provider.storeTextBody(mailboxId, messageId, MimeContentUtil.extractTextBody(messagePartPayload)));
-        savedEmail.setBodyHtmlContentPath(provider.storeHtmlBody(mailboxId, messageId, MimeContentUtil.extractHtmlBody(messagePartPayload)));
+        String dir = buildStoragePath(mailboxId, messageId);
+
+        savedEmail.setRawMessagePath(provider.writeContent(dir, "raw_message.json", message.toPrettyString()));
+        savedEmail.setBodyContentPath(provider.writeContent(dir, "body.txt", MimeContentUtil.extractTextBody(messagePartPayload)));
+        savedEmail.setBodyHtmlContentPath(provider.writeContent(dir, "body.html", MimeContentUtil.extractHtmlBody(messagePartPayload)));
 
         savedEmail.setProcessedStatus(ProcessedStatus.CONTENT_SAVED);
         emailContentService.save(savedEmail);
@@ -128,7 +133,8 @@ public class GmailMessageProcessingService {
 
                 EmailStorageProvider provider = storageProviderFactory.getProvider();
                 String fileName = StringUtils.hasText(part.getFilename()) ? part.getFilename() : "unnamed_" + System.currentTimeMillis();
-                String storagePath = provider.storeAttachment(mailboxId, messageId, fileName, data);
+                String attachmentDir = buildStoragePath(mailboxId, messageId) + "/attachment";
+                String storagePath = provider.writeBytes(attachmentDir, fileName, data);
                 saveEmailAttachmentEntity(savedEmail, part, fileName, storagePath, data.length, provider.getClass().getSimpleName());
             }
         } catch (Exception e) {
@@ -162,6 +168,13 @@ public class GmailMessageProcessingService {
 
         log.warn("Empty attachment data for '{}' in message {}", part.getFilename(), messageId);
         return null;
+    }
+
+    private String buildStoragePath(Long mailboxId, String messageId) {
+        return Path.of(emailStorageProperties.localBasePath()).toAbsolutePath()
+                .resolve(String.valueOf(mailboxId))
+                .resolve(messageId)
+                .toString();
     }
 
     private void saveEmailAttachmentEntity(EmailContent savedEmail, MessagePart part, String fileName, String storagePath, long sizeInBytes, String providerName) {
