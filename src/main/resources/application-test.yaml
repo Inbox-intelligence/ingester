@@ -1,5 +1,9 @@
-gmail:
+gmail-api:
   client-id: test
   client-secret: test
-  redirect-url: http://localhost
+  redirect-uri: http://localhost
   scope: test
+  pubsub-topic: test
+  project-id: test
+  pubsub-subscription-id: test
+  service-account-key-path: ./gcp-service-account.json

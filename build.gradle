@@ -18,10 +18,21 @@ configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
 	}
+	all {
+		resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+	}
 }
 
 repositories {
 	mavenLocal()
+	maven {
+		name = "GitHubPackages"
+		url = uri("https://maven.pkg.github.com/rja712/persistence-lib")
+		credentials {
+			username = System.getenv("GITHUB_USERNAME") ?: ""
+			password = System.getenv("GITHUB_TOKEN") ?: ""
+		}
+	}
 	mavenCentral()
 }
 

@@ -47,7 +47,10 @@ public class GmailPubSubSubscriber {
 
         var keyPath = Path.of(gmailApiProperties.serviceAccountKeyPath()).toAbsolutePath();
         log.info("Loading GCP credentials from: {}", keyPath);
-        var credentials = GoogleCredentials.fromStream(new FileInputStream(keyPath.toFile()));
+        GoogleCredentials credentials;
+        try (var fis = new FileInputStream(keyPath.toFile())) {
+            credentials = GoogleCredentials.fromStream(fis);
+        }
 
         subscriber = Subscriber.newBuilder(projectSubscriptionName, this::handleMessage)
                 .setCredentialsProvider(() -> credentials)
