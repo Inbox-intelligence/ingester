@@ -67,8 +67,7 @@ public class GmailTokenService {
         log.info("Starting Gmail mailbox watch (Pub/Sub)");
 
         var gmail = gmailClientFactory.createUsingGoogleTokenResponse(tokenResponse);
-        var response = gmailApiClient.watchMailbox(
-                gmail, gmailApiProperties.pubsubTopic(), List.of("INBOX"));
+        var response = gmailApiClient.watchMailbox(gmail, gmailApiProperties.pubsubTopic(), List.of("INBOX"));
 
         log.info("Mailbox watch started. historyId={}, expiresAt={}", response.getHistoryId(), response.getExpiration());
 
