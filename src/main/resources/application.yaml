@@ -31,11 +31,6 @@ spring:
       queue: ${RABBITMQ_QUEUE}
       routing-key: ${RABBITMQ_ROUTING_KEY}
 
-
-
-
-
-
 resilience4j:
   retry:
     instances:
