@@ -54,6 +54,6 @@ gmail-api:
   pubsub-subscription-id: ${GCP_PUBSUB_SUBSCRIPTION_ID}
   service-account-key-path: ${GCP_SERVICE_ACCOUNT_KEY_PATH:./gcp-service-account.json}
 
-email-storage:
-  provider: ${EMAIL_STORAGE_PROVIDER}
+email-storage-provider:
+  name: ${EMAIL_STORAGE_PROVIDER_NAME}
   local-base-path: ${EMAIL_STORAGE_LOCAL_BASE_PATH}

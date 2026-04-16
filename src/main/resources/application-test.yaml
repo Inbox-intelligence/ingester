@@ -24,6 +24,6 @@ gmail-api:
   pubsub-subscription-id: test
   service-account-key-path: ./gcp-service-account.json
 
-email-storage:
-  provider: LOCAL
+email-storage-provider:
+  name: LOCAL
   local-base-path: /tmp/ingester-test

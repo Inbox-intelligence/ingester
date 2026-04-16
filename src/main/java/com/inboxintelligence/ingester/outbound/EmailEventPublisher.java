@@ -1,7 +1,7 @@
 package com.inboxintelligence.ingester.outbound;
 
 import com.inboxintelligence.ingester.config.EmailEventPublishProperties;
-import com.inboxintelligence.persistence.model.EmailProcessedEvent;
+import com.inboxintelligence.ingester.model.EmailEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -17,7 +17,7 @@ public class EmailEventPublisher {
 
     public void publishEmailProcessed(Long emailContentId) {
 
-        var event = new EmailProcessedEvent(emailContentId);
+        var event = new EmailEvent(emailContentId);
         rabbitTemplate.convertAndSend(queueProperties.exchange(), queueProperties.routingKey(), event);
         log.info("Published email processed event for emailContentId: {}", emailContentId);
     }
