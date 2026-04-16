@@ -40,15 +40,19 @@ public class GmailMessageProcessingService {
 
     public void process(Gmail gmail, Long mailboxId, Message message) {
 
+        EmailContent savedEmail = null;
         try {
             log.debug("Processing message {} for mailbox {}", message.getId(), mailboxId);
 
-            var savedEmail = saveEmailContentEntity(mailboxId, message);
+            savedEmail = saveEmailContentEntity(mailboxId, message);
             saveEmailContentInStorage(mailboxId, message, savedEmail);
             saveEmailAttachment(gmail, mailboxId, message, savedEmail);
             emailEventPublisher.publishEmailProcessed(savedEmail.getId());
         } catch (Exception e) {
             log.error("Failed to process message {} for mailbox {}", message.getId(), mailboxId, e);
+            if (savedEmail != null) {
+                emailContentService.updateProcessingNote(savedEmail, e.getMessage());
+            }
             throw new RuntimeException(e);
         }
     }
