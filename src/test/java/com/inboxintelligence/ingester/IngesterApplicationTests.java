@@ -9,8 +9,8 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("test")
 class IngesterApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+    @Test
+    void contextLoads() {
+    }
 
 }
