@@ -3,6 +3,7 @@ package com.inboxintelligence.ingester.outbound;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.*;
+import com.inboxintelligence.ingester.exception.MessageNotFoundException;
 import com.inboxintelligence.ingester.exception.RetryableGmailApiException;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;
@@ -94,6 +95,11 @@ public class GmailApiClient {
         if (status == 429 || status >= 500) {
             log.warn("Gmail API: {} returned retryable status {}", operation, status);
             return new RetryableGmailApiException("Retrying " + operation + ": Received " + status);
+        }
+
+        if (status == 404) {
+            log.warn("Gmail API: {} — entity not found (likely deleted)", operation);
+            return new MessageNotFoundException(operation + ": message not found");
         }
 
         log.error("Gmail API: {} returned non-retryable status {}", operation, status, ex);

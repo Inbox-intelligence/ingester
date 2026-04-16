@@ -5,6 +5,7 @@ import com.google.api.services.gmail.model.History;
 import com.google.api.services.gmail.model.HistoryMessageAdded;
 import com.google.api.services.gmail.model.ListHistoryResponse;
 import com.google.api.services.gmail.model.Message;
+import com.inboxintelligence.ingester.exception.MessageNotFoundException;
 import com.inboxintelligence.ingester.outbound.GmailApiClient;
 import com.inboxintelligence.ingester.outbound.GmailClientFactory;
 import com.inboxintelligence.persistence.model.entity.GmailMailbox;
@@ -149,6 +150,8 @@ public class GmailSyncService {
         try {
             Message message = gmailApiClient.fetchMessage(gmail, messageId);
             gmailMessageProcessingService.process(gmail, mailbox.getId(), message);
+        } catch (MessageNotFoundException e) {
+            log.warn("Message {} no longer exists for {} — skipping", messageId, mailbox.getEmailAddress());
         } catch (Exception e) {
             log.error("Failed to process message {} for mailbox {}", messageId, mailbox.getEmailAddress(), e);
         }
