@@ -53,7 +53,7 @@ public class GmailMessageProcessingService {
         } catch (Exception e) {
             log.error("Failed to process message {} for mailbox {}", message.getId(), mailboxId, e);
             if (savedEmail != null) {
-                emailContentService.updateStatusAndNote(savedEmail, PROCESSING_FAILED, e.getMessage());
+                emailContentService.updateStatusAndNote(savedEmail, INGESTION_FAILED, e.getMessage());
             }
             throw new RuntimeException(e);
         }
