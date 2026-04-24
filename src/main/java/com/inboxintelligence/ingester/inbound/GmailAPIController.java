@@ -16,7 +16,7 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/gmail-api")
 @RequiredArgsConstructor
-public class GmailApiController {
+public class GmailAPIController {
 
     private final GmailOAuthLoginService gmailOAuthLoginService;
     private final GmailTokenService gmailTokenService;
