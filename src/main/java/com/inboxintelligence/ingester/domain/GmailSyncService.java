@@ -21,9 +21,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
-/**
- * Handles Gmail mailbox sync concurrency control and trigger logic.
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor

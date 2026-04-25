@@ -13,9 +13,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
 
-/**
- * Low-level Gmail API client with resilience4j retry for transient errors.
- */
 @Slf4j
 @Component
 public class GmailApiClient {
@@ -77,7 +74,7 @@ public class GmailApiClient {
 
         log.debug("Gmail API: watchMailbox topic={} labelIds={}", topic, labelIds);
         try {
-            var watchRequest = new WatchRequest()
+            WatchRequest watchRequest = new WatchRequest()
                     .setTopicName(topic)
                     .setLabelIds(labelIds);
             return gmail.users().watch("me", watchRequest).execute();

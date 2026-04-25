@@ -28,7 +28,7 @@ public class GmailAPIController {
 
         try {
 
-            var authUrl = gmailOAuthLoginService.invokeOAuthRedirectURI();
+            String authUrl = gmailOAuthLoginService.invokeOAuthRedirectURI();
             log.info("Generated Gmail Oauth Redirect URI");
             response.sendRedirect(authUrl);
 

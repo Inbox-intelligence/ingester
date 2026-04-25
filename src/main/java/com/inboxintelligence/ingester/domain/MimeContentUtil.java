@@ -12,9 +12,6 @@ import java.util.List;
 
 import static com.inboxintelligence.ingester.utils.Base64Util.decodeBase64String;
 
-/**
- * Walks MIME trees and extracts body text, HTML, and attachment parts.
- */
 @UtilityClass
 public final class MimeContentUtil {
 

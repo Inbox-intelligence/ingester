@@ -5,9 +5,6 @@ import lombok.experimental.UtilityClass;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-/**
- * URL-safe Base64 decoding utilities for Gmail API data.
- */
 @UtilityClass
 public class Base64Util {
 

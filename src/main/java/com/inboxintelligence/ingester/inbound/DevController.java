@@ -1,6 +1,7 @@
 package com.inboxintelligence.ingester.inbound;
 
 import com.inboxintelligence.ingester.outbound.EmailEventPublisher;
+import com.inboxintelligence.persistence.model.entity.EmailContent;
 import com.inboxintelligence.persistence.service.EmailContentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,9 +10,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * TODO: Delete this controller — temporary dev utility for replaying emails to RabbitMQ.
- */
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequestMapping("/dev")
@@ -24,10 +24,10 @@ public class DevController {
     @PostMapping("/republish-all")
     public ResponseEntity<String> republishAll() {
 
-        var emails = emailContentService.findAll();
+        List<EmailContent> emails = emailContentService.findAll();
         log.info("Republishing {} emails to RabbitMQ", emails.size());
 
-        for (var email : emails) {
+        for (EmailContent email : emails) {
             emailEventPublisher.publishEmailProcessed(email);
         }
 

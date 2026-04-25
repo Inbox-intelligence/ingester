@@ -21,12 +21,10 @@ import org.springframework.stereotype.Component;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 import static com.inboxintelligence.persistence.model.SyncStatus.DISCONNECTED;
 
-/**
- * Listens on Google Cloud Pub/Sub for Gmail push notifications and triggers mailbox sync.
- */
 @Slf4j
 @Component
 @Profile("!test")
@@ -43,12 +41,12 @@ public class GmailPubSubSubscriber {
     @PostConstruct
     public void start() throws IOException {
 
-        var projectSubscriptionName = ProjectSubscriptionName.of(gmailApiProperties.projectId(), gmailApiProperties.pubsubSubscriptionId());
+        ProjectSubscriptionName projectSubscriptionName = ProjectSubscriptionName.of(gmailApiProperties.projectId(), gmailApiProperties.pubsubSubscriptionId());
 
-        var keyPath = Path.of(gmailApiProperties.serviceAccountKeyPath()).toAbsolutePath();
+        Path keyPath = Path.of(gmailApiProperties.serviceAccountKeyPath()).toAbsolutePath();
         log.info("Loading GCP credentials from: {}", keyPath);
         GoogleCredentials credentials;
-        try (var fis = new FileInputStream(keyPath.toFile())) {
+        try (FileInputStream fis = new FileInputStream(keyPath.toFile())) {
             credentials = GoogleCredentials.fromStream(fis);
         }
 
@@ -57,7 +55,6 @@ public class GmailPubSubSubscriber {
                 .build();
         subscriber.startAsync().awaitRunning();
         log.info("Gmail Pub/Sub subscriber started for subscription={}", projectSubscriptionName);
-
     }
 
     @PreDestroy
@@ -67,7 +64,6 @@ public class GmailPubSubSubscriber {
             subscriber.stopAsync();
             log.info("Gmail Pub/Sub subscriber stopped");
         }
-
     }
 
     public void handleMessage(PubsubMessage message, AckReplyConsumer consumer) {
@@ -78,8 +74,8 @@ public class GmailPubSubSubscriber {
             String payload = message.getData().toStringUtf8();
             log.info("Received Gmail Pub/Sub payload: {}", payload);
 
-            var event = objectMapper.readValue(payload, GmailEvent.class);
-            var gmailMailboxOptional = gmailMailboxService.findByEmailAddress(event.emailAddress());
+            GmailEvent event = objectMapper.readValue(payload, GmailEvent.class);
+            Optional<GmailMailbox> gmailMailboxOptional = gmailMailboxService.findByEmailAddress(event.emailAddress());
 
             if (gmailMailboxOptional.isEmpty()) {
                 log.warn("Mailbox not found for email {}", event.emailAddress());
@@ -106,7 +102,6 @@ public class GmailPubSubSubscriber {
 
             log.error("Failed to process Gmail Pub/Sub message", e);
             consumer.nack();
-
         }
     }
 

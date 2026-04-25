@@ -22,9 +22,6 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 
-/**
- * Builds Gmail API client instances using OAuth credentials.
- */
 @Component
 @Slf4j
 public class GmailClientFactory {
@@ -41,15 +38,15 @@ public class GmailClientFactory {
 
     public Gmail createUsingGoogleTokenResponse(GoogleTokenResponse googleTokenResponse) {
         log.debug("Creating Gmail client using token response");
-        var expiresAt = Instant.now().plusSeconds(googleTokenResponse.getExpiresInSeconds());
-        var accesstoken = new AccessToken(googleTokenResponse.getAccessToken(), Date.from(expiresAt));
-        var credentials = GoogleCredentials.create(accesstoken);
+        Instant expiresAt = Instant.now().plusSeconds(googleTokenResponse.getExpiresInSeconds());
+        AccessToken accesstoken = new AccessToken(googleTokenResponse.getAccessToken(), Date.from(expiresAt));
+        GoogleCredentials credentials = GoogleCredentials.create(accesstoken);
         return this.create(credentials);
     }
 
     public Gmail createUsingRefreshToken(String refreshToken) {
         log.debug("Creating Gmail client using refresh token");
-        var credentials = UserCredentials.newBuilder()
+        UserCredentials credentials = UserCredentials.newBuilder()
                 .setClientId(gmailApiProperties.clientId())
                 .setClientSecret(gmailApiProperties.clientSecret())
                 .setRefreshToken(refreshToken)

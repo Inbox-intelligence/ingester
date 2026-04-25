@@ -20,13 +20,11 @@ import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.List;
 
 import static com.inboxintelligence.ingester.utils.Base64Util.decodeBase64Bytes;
 import static com.inboxintelligence.persistence.model.ProcessedStatus.*;
 
-/**
- * Orchestrates the full processing of a Gmail message: extract, store, save, and handle attachments.
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -61,12 +59,10 @@ public class GmailMessageProcessingService {
 
     private EmailContent saveEmailContentEntity(Long mailboxId, Message message) {
 
-        // Step 1: Save email metadata to DB with status EMAIL_RECEIVED
-
         String messageId = message.getId();
         Instant messageDate = MimeContentUtil.parseInternalDate(message);
 
-        var emailContent = EmailContent.builder()
+        EmailContent emailContent = EmailContent.builder()
                 .gmailMailboxId(mailboxId)
                 .messageId(messageId)
                 .threadId(message.getThreadId())
@@ -80,20 +76,17 @@ public class GmailMessageProcessingService {
                 .processedStatus(EMAIL_RECEIVED)
                 .build();
 
-        var savedEmail = emailContentService.save(emailContent);
+        EmailContent savedEmail = emailContentService.save(emailContent);
         log.info("Email saved {}: {}", messageId, MimeContentUtil.getHeader(message, "Subject"));
         return savedEmail;
-
     }
 
     private void saveEmailContentInStorage(Long mailboxId, Message message, EmailContent savedEmail) throws IOException {
 
-        // Step 2: Store content to storage and update paths + status CONTENT_SAVED
-
         String messageId = message.getId();
         MessagePart messagePartPayload = message.getPayload();
 
-        var provider = storageProviderFactory.getProvider();
+        EmailStorageProvider provider = storageProviderFactory.getProvider();
 
         savedEmail.setRawMessagePath(provider.writeContent(mailboxId, messageId, "raw_message.json", message.toPrettyString()));
         savedEmail.setBodyContentPath(provider.writeContent(mailboxId, messageId, "body.txt", MimeContentUtil.extractTextBody(messagePartPayload)));
@@ -103,18 +96,14 @@ public class GmailMessageProcessingService {
         emailContentService.save(savedEmail);
 
         log.info("Content saved for message {}", messageId);
-
     }
 
-
     private void saveEmailAttachment(Gmail gmail, Long mailboxId, Message message, EmailContent savedEmail) {
-
-        // Step 3: Process attachments and update status to ATTACHMENT_SAVED
 
         String messageId = message.getId();
         MessagePart messagePartPayload = message.getPayload();
 
-        var list = MimeContentUtil.extractAttachmentMessageParts(messagePartPayload);
+        List<MessagePart> list = MimeContentUtil.extractAttachmentMessageParts(messagePartPayload);
         log.debug("Found {} attachments for message {}", list.size(), messageId);
 
         list.forEach(part -> processAttachmentMessageParts(gmail, savedEmail, mailboxId, messageId, part));
@@ -202,6 +191,4 @@ public class GmailMessageProcessingService {
         emailAttachmentService.save(attachment);
         log.info("Attachment saved: '{}' ({}) for message {}", fileName, part.getMimeType(), savedEmail.getMessageId());
     }
-
-
 }

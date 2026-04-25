@@ -1,6 +1,8 @@
 package com.inboxintelligence.ingester.domain;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
+import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.WatchResponse;
 import com.inboxintelligence.ingester.config.GmailApiProperties;
 import com.inboxintelligence.ingester.outbound.GmailApiClient;
@@ -15,9 +17,6 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.List;
 
-/**
- * Handles OAuth token exchange, ID verification, and mailbox onboarding.
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -34,9 +33,9 @@ public class GmailTokenService {
 
         try {
 
-            var tokenResponse = gmailClientFactory.createAuthorizationCodeTokenRequest(authorizationCode).execute();
-            var emailAddress = verifyAndExtractEmail(tokenResponse);
-            var watchResponse = startMailboxWatch(tokenResponse);
+            GoogleTokenResponse tokenResponse = gmailClientFactory.createAuthorizationCodeTokenRequest(authorizationCode).execute();
+            String emailAddress = verifyAndExtractEmail(tokenResponse);
+            WatchResponse watchResponse = startMailboxWatch(tokenResponse);
 
             saveGmailMailbox(tokenResponse, watchResponse, emailAddress);
             log.info("Gmail mailbox onboarding completed for {}", emailAddress);
@@ -50,7 +49,7 @@ public class GmailTokenService {
     private String verifyAndExtractEmail(GoogleTokenResponse tokenResponse) throws Exception {
 
         log.info("Verifying Google ID token");
-        var idToken = gmailClientFactory.createIdTokenVerifier().verify(tokenResponse.getIdToken());
+        GoogleIdToken idToken = gmailClientFactory.createIdTokenVerifier().verify(tokenResponse.getIdToken());
 
         if (idToken == null) {
             throw new IllegalStateException("Invalid Google ID token");
@@ -66,8 +65,8 @@ public class GmailTokenService {
 
         log.info("Starting Gmail mailbox watch (Pub/Sub)");
 
-        var gmail = gmailClientFactory.createUsingGoogleTokenResponse(tokenResponse);
-        var response = gmailApiClient.watchMailbox(gmail, gmailApiProperties.pubsubTopic(), List.of("INBOX"));
+        Gmail gmail = gmailClientFactory.createUsingGoogleTokenResponse(tokenResponse);
+        WatchResponse response = gmailApiClient.watchMailbox(gmail, gmailApiProperties.pubsubTopic(), List.of("INBOX"));
 
         log.info("Mailbox watch started. historyId={}, expiresAt={}", response.getHistoryId(), response.getExpiration());
 
@@ -76,8 +75,8 @@ public class GmailTokenService {
 
     private void saveGmailMailbox(GoogleTokenResponse tokenResponse, WatchResponse watchResponse, String email) {
 
-        var gmailMailbox = gmailMailboxService.findByEmailAddress(email).orElseGet(GmailMailbox::new);
-        var accessTokenExpiresAt = Instant.now().plusSeconds(tokenResponse.getExpiresInSeconds());
+        GmailMailbox gmailMailbox = gmailMailboxService.findByEmailAddress(email).orElseGet(GmailMailbox::new);
+        Instant accessTokenExpiresAt = Instant.now().plusSeconds(tokenResponse.getExpiresInSeconds());
 
         gmailMailbox.setEmailAddress(email);
         gmailMailbox.setAccessToken(tokenResponse.getAccessToken());

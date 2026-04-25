@@ -1,3 +1,6 @@
+server:
+  port: 8080
+
 spring:
 
   application:
@@ -10,6 +13,7 @@ spring:
     driver-class-name: org.postgresql.Driver
 
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: validate
     show-sql: false
