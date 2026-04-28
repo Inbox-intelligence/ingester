@@ -70,6 +70,19 @@ public class GmailApiClient {
     }
 
     @Retry(name = "gmailRetry")
+    public ListLabelsResponse listLabels(Gmail gmail) {
+
+        log.debug("Gmail API: listLabels");
+        try {
+            return gmail.users().labels().list("me").execute();
+        } catch (GoogleJsonResponseException ex) {
+            throw handleGoogleJsonException(ex, "listLabels");
+        } catch (IOException e) {
+            throw new RetryableGmailApiException("Retrying listLabels: " + e.getMessage());
+        }
+    }
+
+    @Retry(name = "gmailRetry")
     public WatchResponse watchMailbox(Gmail gmail, String topic, List<String> labelIds) {
 
         log.debug("Gmail API: watchMailbox topic={} labelIds={}", topic, labelIds);
