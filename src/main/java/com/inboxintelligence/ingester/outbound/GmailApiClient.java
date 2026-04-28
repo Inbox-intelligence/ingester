@@ -70,6 +70,25 @@ public class GmailApiClient {
     }
 
     @Retry(name = "gmailRetry")
+    public ListMessagesResponse listMessages(Gmail gmail, String query, String pageToken) {
+
+        log.debug("Gmail API: listMessages query='{}' pageToken={}", query, pageToken);
+        try {
+            return gmail.users()
+                    .messages()
+                    .list("me")
+                    .setQ(query)
+                    .setPageToken(pageToken)
+                    .setMaxResults(500L)
+                    .execute();
+        } catch (GoogleJsonResponseException ex) {
+            throw handleGoogleJsonException(ex, "listMessages");
+        } catch (IOException e) {
+            throw new RetryableGmailApiException("Retrying listMessages: " + e.getMessage());
+        }
+    }
+
+    @Retry(name = "gmailRetry")
     public ListLabelsResponse listLabels(Gmail gmail) {
 
         log.debug("Gmail API: listLabels");
