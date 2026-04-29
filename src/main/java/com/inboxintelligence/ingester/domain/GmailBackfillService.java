@@ -25,10 +25,10 @@ public class GmailBackfillService {
     private final GmailMailboxService gmailMailboxService;
     private final EmailContentService emailContentService;
 
-    public void backfill(Long mailboxId, String query) {
+    public void backfill(String mailboxAddress, String query) {
 
-        GmailMailbox mailbox = gmailMailboxService.findById(mailboxId)
-                .orElseThrow(() -> new IllegalArgumentException("Mailbox not found: " + mailboxId));
+        GmailMailbox mailbox = gmailMailboxService.findByEmailAddress(mailboxAddress)
+                .orElseThrow(() -> new IllegalArgumentException("Mailbox not found: " + mailboxAddress));
 
         log.info("Backfill started for {} q='{}'", mailbox.getEmailAddress(), query);
 
@@ -51,14 +51,14 @@ public class GmailBackfillService {
 
                 total++;
 
-                if (emailContentService.existsByGmailMailboxIdAndMessageId(mailboxId, stub.getId())) {
+                if (emailContentService.existsByGmailMailboxIdAndMessageId(mailbox.getId(), stub.getId())) {
                     skipped++;
                     continue;
                 }
 
                 try {
                     Message full = gmailApiClient.fetchMessage(gmail, stub.getId());
-                    gmailMessageProcessingService.process(gmail, mailboxId, mailbox.getEmailAddress(), full, EmailOrigin.BACKFILL);
+                    gmailMessageProcessingService.process(gmail, mailbox.getId(), mailbox.getEmailAddress(), full, EmailOrigin.BACKFILL);
                     processed++;
                 } catch (MessageNotFoundException e) {
                     log.warn("Backfill: message {} no longer exists for {} — skipping", stub.getId(), mailbox.getEmailAddress());

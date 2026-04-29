@@ -41,11 +41,11 @@ public class DevController {
 
     @PostMapping("/backfill")
     public ResponseEntity<Map<String, Object>> backfill(
-            @RequestParam("mailbox_id") Long mailboxId,
-            @RequestParam(value = "q", required = false, defaultValue = "") String query) {
+            @RequestParam("mailboxAddress") String mailboxAddress,
+            @RequestParam(value = "query", required = false, defaultValue = "") String query) {
 
-        CompletableFuture.runAsync(() -> gmailBackfillService.backfill(mailboxId, query));
-        log.info("Backfill triggered for mailboxId={} q='{}'", mailboxId, query);
-        return ResponseEntity.accepted().body(Map.of("triggered", true, "mailbox_id", mailboxId, "q", query));
+        CompletableFuture.runAsync(() -> gmailBackfillService.backfill(mailboxAddress, query));
+        log.info("Backfill triggered for mailboxAddress={} q='{}'", mailboxAddress, query);
+        return ResponseEntity.accepted().body(Map.of("triggered", true, "mailboxAddress", mailboxAddress, "q", query));
     }
 }
