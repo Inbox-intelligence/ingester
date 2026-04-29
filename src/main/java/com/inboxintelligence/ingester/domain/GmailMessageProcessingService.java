@@ -46,7 +46,6 @@ public class GmailMessageProcessingService {
             savedEmail = saveEmailContentEntity(mailboxId, message, origin);
             saveEmailContentInStorage(mailboxId, message, savedEmail);
             saveEmailAttachment(gmail, mailboxId, message, savedEmail);
-
             emailEventPublisher.publishEmailProcessed(savedEmail);
 
         } catch (Exception e) {
@@ -184,7 +183,7 @@ public class GmailMessageProcessingService {
 
         EmailAttachment attachment = EmailAttachment.builder()
                 .emailContentId(savedEmail.getId())
-                .emailAttachmentId(part.getBody().getAttachmentId())
+                .emailAttachmentId(part.getBody() != null ? part.getBody().getAttachmentId() : null)
                 .fileName(fileName)
                 .mimeType(part.getMimeType())
                 .sizeInBytes(sizeInBytes)

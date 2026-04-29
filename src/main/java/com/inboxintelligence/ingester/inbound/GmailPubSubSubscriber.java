@@ -22,6 +22,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static com.inboxintelligence.persistence.model.SyncStatus.DISCONNECTED;
 
@@ -39,7 +41,7 @@ public class GmailPubSubSubscriber {
     private Subscriber subscriber;
 
     @PostConstruct
-    public void start() throws IOException {
+    public void start() throws IOException, TimeoutException {
 
         ProjectSubscriptionName projectSubscriptionName = ProjectSubscriptionName.of(gmailApiProperties.projectId(), gmailApiProperties.pubsubSubscriptionId());
 
@@ -53,7 +55,7 @@ public class GmailPubSubSubscriber {
         subscriber = Subscriber.newBuilder(projectSubscriptionName, this::handleMessage)
                 .setCredentialsProvider(() -> credentials)
                 .build();
-        subscriber.startAsync().awaitRunning();
+        subscriber.startAsync().awaitRunning(30, TimeUnit.SECONDS);
         log.info("Gmail Pub/Sub subscriber started for subscription={}", projectSubscriptionName);
     }
 

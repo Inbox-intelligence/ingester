@@ -48,6 +48,7 @@ public class GmailSyncService {
 
         if (mailbox.getHistoryId() > eventHistoryId) {
             log.info("Ignoring stale Gmail event for {} (mailbox historyId {} > event historyId {})", email, mailbox.getHistoryId(), eventHistoryId);
+            mailboxMaxHistory.remove(email);
             return;
         }
 
