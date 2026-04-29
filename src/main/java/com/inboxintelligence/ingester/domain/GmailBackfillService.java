@@ -58,7 +58,7 @@ public class GmailBackfillService {
 
                 try {
                     Message full = gmailApiClient.fetchMessage(gmail, stub.getId());
-                    gmailMessageProcessingService.process(gmail, mailboxId, full, EmailOrigin.BACKFILL);
+                    gmailMessageProcessingService.process(gmail, mailboxId, mailbox.getEmailAddress(), full, EmailOrigin.BACKFILL);
                     processed++;
                 } catch (MessageNotFoundException e) {
                     log.warn("Backfill: message {} no longer exists for {} — skipping", stub.getId(), mailbox.getEmailAddress());

@@ -37,15 +37,15 @@ public class GmailMessageProcessingService {
     private final EmailStorageProviderFactory storageProviderFactory;
     private final EmailEventPublisher emailEventPublisher;
 
-    public void process(Gmail gmail, Long mailboxId, Message message, EmailOrigin origin) {
+    public void process(Gmail gmail, Long mailboxId, String email, Message message, EmailOrigin origin) {
 
         EmailContent savedEmail = null;
         try {
             log.debug("Processing message {} for mailbox {}", message.getId(), mailboxId);
 
             savedEmail = saveEmailContentEntity(mailboxId, message, origin);
-            saveEmailContentInStorage(mailboxId, message, savedEmail);
-            saveEmailAttachment(gmail, mailboxId, message, savedEmail);
+            saveEmailContentInStorage(email, message, savedEmail);
+            saveEmailAttachment(gmail, email, message, savedEmail);
             emailEventPublisher.publishEmailProcessed(savedEmail);
 
         } catch (Exception e) {
@@ -82,7 +82,7 @@ public class GmailMessageProcessingService {
         return savedEmail;
     }
 
-    private void saveEmailContentInStorage(Long mailboxId, Message message, EmailContent savedEmail) throws IOException {
+    private void saveEmailContentInStorage(String email, Message message, EmailContent savedEmail) throws IOException {
 
         String messageId = message.getId();
         MessagePart messagePartPayload = message.getPayload();
@@ -90,10 +90,10 @@ public class GmailMessageProcessingService {
         EmailStorageProvider provider = storageProviderFactory.getProvider();
 
         try{
-            savedEmail.setBodyContentPath(provider.writeContent(mailboxId, messageId, "body.txt", MimeContentUtil.extractTextBody(messagePartPayload)));
-            savedEmail.setBodyHtmlContentPath(provider.writeContent(mailboxId, messageId, "body.html", MimeContentUtil.extractHtmlBody(messagePartPayload)));
+            savedEmail.setBodyContentPath(provider.writeContent(email, messageId, "body.txt", MimeContentUtil.extractTextBody(messagePartPayload)));
+            savedEmail.setBodyHtmlContentPath(provider.writeContent(email, messageId, "body.html", MimeContentUtil.extractHtmlBody(messagePartPayload)));
         } catch (Exception e) {
-            savedEmail.setRawMessagePath(provider.writeContent(mailboxId, messageId, "raw_message.json", message.toPrettyString()));
+            savedEmail.setRawMessagePath(provider.writeContent(email, messageId, "raw_message.json", message.toPrettyString()));
             throw e;
         }
 
@@ -103,7 +103,7 @@ public class GmailMessageProcessingService {
         log.info("Content saved for message {}", messageId);
     }
 
-    private void saveEmailAttachment(Gmail gmail, Long mailboxId, Message message, EmailContent savedEmail) {
+    private void saveEmailAttachment(Gmail gmail, String email, Message message, EmailContent savedEmail) {
 
         String messageId = message.getId();
         MessagePart messagePartPayload = message.getPayload();
@@ -111,7 +111,7 @@ public class GmailMessageProcessingService {
         List<MessagePart> list = MimeContentUtil.extractAttachmentMessageParts(messagePartPayload);
         log.debug("Found {} attachments for message {}", list.size(), messageId);
 
-        list.forEach(part -> processAttachmentMessageParts(gmail, savedEmail, mailboxId, messageId, part));
+        list.forEach(part -> processAttachmentMessageParts(gmail, savedEmail, email, messageId, part));
 
         savedEmail.setProcessedStatus(ATTACHMENT_SAVED);
         emailContentService.save(savedEmail);
@@ -119,7 +119,7 @@ public class GmailMessageProcessingService {
         log.info("Attachments saved for message {}", messageId);
     }
 
-    private void processAttachmentMessageParts(Gmail gmail, EmailContent savedEmail, Long mailboxId, String messageId, MessagePart part) {
+    private void processAttachmentMessageParts(Gmail gmail, EmailContent savedEmail, String email, String messageId, MessagePart part) {
 
         try {
 
@@ -129,7 +129,7 @@ public class GmailMessageProcessingService {
 
                 EmailStorageProvider provider = storageProviderFactory.getProvider();
                 String fileName = StringUtils.hasText(part.getFilename()) ? part.getFilename() : "unnamed_" + System.currentTimeMillis();
-                String storagePath = provider.writeBytes(mailboxId, messageId, "attachment", fileName, data);
+                String storagePath = provider.writeBytes(email, messageId, "attachment", fileName, data);
                 saveEmailAttachmentEntity(savedEmail, part, fileName, storagePath, data.length, "local");
             }
         } catch (Exception e) {

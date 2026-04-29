@@ -148,7 +148,7 @@ public class GmailSyncService {
 
         try {
             Message message = gmailApiClient.fetchMessage(gmail, messageId);
-            gmailMessageProcessingService.process(gmail, mailbox.getId(), message, EmailOrigin.PUB_SUB);
+            gmailMessageProcessingService.process(gmail, mailbox.getId(), mailbox.getEmailAddress(), message, EmailOrigin.PUB_SUB);
         } catch (MessageNotFoundException e) {
             log.warn("Message {} no longer exists for {} — skipping", messageId, mailbox.getEmailAddress());
         } catch (Exception e) {
