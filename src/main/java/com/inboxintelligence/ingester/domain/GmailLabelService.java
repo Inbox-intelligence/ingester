@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -27,7 +29,20 @@ public class GmailLabelService {
     private final GmailApiClient gmailApiClient;
     private final GmailLabelProcessingService gmailLabelProcessingService;
 
+    private final ConcurrentHashMap<String, ReentrantLock> mailboxLocks = new ConcurrentHashMap<>();
+
     public Map<String, Object> fetchLabels(String mailboxAddress) {
+
+        ReentrantLock lock = mailboxLocks.computeIfAbsent(mailboxAddress, k -> new ReentrantLock());
+        lock.lock();
+        try {
+            return doFetchLabels(mailboxAddress);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private Map<String, Object> doFetchLabels(String mailboxAddress) {
 
         GmailMailbox mailbox = gmailMailboxService.findByEmailAddress(mailboxAddress)
                 .orElseThrow(() -> new IllegalArgumentException("Mailbox not found: " + mailboxAddress));
