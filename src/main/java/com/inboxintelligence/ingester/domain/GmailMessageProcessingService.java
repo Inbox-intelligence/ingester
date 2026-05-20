@@ -89,7 +89,7 @@ public class GmailMessageProcessingService {
 
         EmailStorageProvider provider = storageProviderFactory.getProvider();
 
-        try{
+        try {
             savedEmail.setBodyContentPath(provider.writeContent(email, messageId, "body.txt", MimeContentUtil.extractTextBody(messagePartPayload)));
             savedEmail.setBodyHtmlContentPath(provider.writeContent(email, messageId, "body.html", MimeContentUtil.extractHtmlBody(messagePartPayload)));
         } catch (Exception e) {
