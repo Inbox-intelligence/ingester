@@ -18,6 +18,11 @@ public class GmailLabelProcessingService {
 
     private final LabelService labelService;
 
+    private static String extractDisplayName(String fullName) {
+        int lastSlash = fullName.lastIndexOf('/');
+        return lastSlash >= 0 ? fullName.substring(lastSlash + 1) : fullName;
+    }
+
     public Map<String, Object> processGmailLabels(Long mailboxId, Set<String> inboundLabelFullNames) {
 
         if (inboundLabelFullNames.isEmpty()) {
@@ -67,10 +72,5 @@ public class GmailLabelProcessingService {
         }
 
         return toCreate.size();
-    }
-
-    private static String extractDisplayName(String fullName) {
-        int lastSlash = fullName.lastIndexOf('/');
-        return lastSlash >= 0 ? fullName.substring(lastSlash + 1) : fullName;
     }
 }
