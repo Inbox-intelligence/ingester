@@ -16,7 +16,7 @@ import com.inboxintelligence.persistence.storage.EmailStorageProvider;
 import com.inboxintelligence.persistence.storage.EmailStorageProviderFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
@@ -27,7 +27,7 @@ import static com.inboxintelligence.ingester.utils.Base64Util.decodeBase64Bytes;
 import static com.inboxintelligence.persistence.model.ProcessedStatus.*;
 
 @Slf4j
-@Component
+@Service
 @RequiredArgsConstructor
 public class GmailMessageProcessingService {
 
@@ -130,7 +130,7 @@ public class GmailMessageProcessingService {
                 EmailStorageProvider provider = storageProviderFactory.getProvider();
                 String fileName = StringUtils.hasText(part.getFilename()) ? part.getFilename() : "unnamed_" + System.currentTimeMillis();
                 String storagePath = provider.writeBytes(email, messageId, "attachment", fileName, data);
-                saveEmailAttachmentEntity(savedEmail, part, fileName, storagePath, data.length, "local");
+                saveEmailAttachmentEntity(savedEmail, part, fileName, storagePath, data.length, provider.providerName());
             }
         } catch (Exception e) {
             log.warn("Failed to process attachment '{}' for message {}: {}", part.getFilename(), messageId, e.getMessage());
