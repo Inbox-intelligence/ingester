@@ -182,6 +182,7 @@ public class GmailMessageProcessingService {
         }
 
         EmailAttachment attachment = EmailAttachment.builder()
+                .gmailMailboxId(savedEmail.getGmailMailboxId())
                 .emailContentId(savedEmail.getId())
                 .emailAttachmentId(part.getBody() != null ? part.getBody().getAttachmentId() : null)
                 .fileName(fileName)
