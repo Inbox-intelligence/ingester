@@ -13,6 +13,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -30,6 +33,9 @@ public class GmailMessageBackfillService {
                 .orElseThrow(() -> new IllegalArgumentException("Mailbox not found: " + mailboxAddress));
 
         log.info("Backfill started for {} q='{}'", mailbox.getEmailAddress(), query);
+
+        Set<String> knownMessageIds = new HashSet<>(emailContentService.findMessageIdsByGmailMailboxId(mailbox.getId()));
+        log.debug("Backfill: pre-loaded {} known message ids for {}", knownMessageIds.size(), mailbox.getEmailAddress());
 
         Gmail gmail = gmailClientFactory.createUsingRefreshToken(mailbox.getRefreshToken());
 
@@ -50,7 +56,7 @@ public class GmailMessageBackfillService {
 
                 total++;
 
-                if (emailContentService.existsByGmailMailboxIdAndMessageId(mailbox.getId(), stub.getId())) {
+                if (knownMessageIds.contains(stub.getId())) {
                     skipped++;
                     continue;
                 }
@@ -58,6 +64,7 @@ public class GmailMessageBackfillService {
                 try {
                     Message message = gmailApiClient.fetchMessage(gmail, stub.getId());
                     gmailMessageProcessingService.process(gmail, mailbox, message, EmailOrigin.BACKFILL);
+                    knownMessageIds.add(stub.getId());
                     processed++;
                 } catch (Exception e) {
                     log.error("Backfill: failed to process message {} for mailbox {}: {}", stub.getId(), mailbox.getEmailAddress(), e.getMessage());

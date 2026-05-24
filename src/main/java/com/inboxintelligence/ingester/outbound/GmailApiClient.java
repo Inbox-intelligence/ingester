@@ -128,14 +128,29 @@ public class GmailApiClient {
             return gmail.users().labels().create("me", label).execute();
         } catch (GoogleJsonResponseException ex) {
 
-            if (ex.getStatusCode() == 409 && ex.getDetails().getMessage().equals("Label name exists or conflicts")) {
-                log.warn("Label name exists or conflicts");
-                return null;
+            if (ex.getStatusCode() == 409) {
+                log.warn("Gmail label '{}' already exists — fetching existing", labelName);
+                Label existing = findLabelByName(gmail, labelName);
+                if (existing == null) {
+                    log.warn("Gmail returned 409 for label '{}' but list lookup did not find it", labelName);
+                }
+                return existing;
             }
             throw handleGoogleJsonException(ex, "createLabel");
         } catch (IOException e) {
             throw new RetryableGmailApiException("Retrying createLabel: " + e.getMessage(), e);
         }
+    }
+
+    private Label findLabelByName(Gmail gmail, String labelName) {
+        ListLabelsResponse response = listLabels(gmail);
+        if (response == null || response.getLabels() == null) {
+            return null;
+        }
+        return response.getLabels().stream()
+                .filter(l -> labelName.equals(l.getName()))
+                .findFirst()
+                .orElse(null);
     }
 
     @Retry(name = "gmailRetry")

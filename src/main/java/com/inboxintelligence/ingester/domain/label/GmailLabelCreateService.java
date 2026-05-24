@@ -21,11 +21,6 @@ public class GmailLabelCreateService {
     private final GmailApiClient gmailApiClient;
     private final LabelService labelService;
 
-    private static String extractDisplayName(String fullName) {
-        int lastSlash = fullName.lastIndexOf('/');
-        return lastSlash >= 0 ? fullName.substring(lastSlash + 1) : fullName;
-    }
-
     public void createLabel(String mailboxAddress, String labelName) {
 
         GmailMailbox mailbox = gmailMailboxService.findByEmailAddress(mailboxAddress)
@@ -36,15 +31,18 @@ public class GmailLabelCreateService {
         Gmail gmail = gmailClientFactory.createUsingRefreshToken(mailbox.getRefreshToken());
         com.google.api.services.gmail.model.Label created = gmailApiClient.createLabel(gmail, labelName);
 
-        if (created != null) {
-
-            Label saved = labelService.save(Label.builder()
-                    .gmailMailboxId(mailbox.getId())
-                    .displayName(extractDisplayName(created.getName()))
-                    .fullName(created.getName())
-                    .build());
-
-            log.info("Created gmail label for {}: gmailId={} localId={} name='{}'", mailbox.getEmailAddress(), created.getId(), saved.getId(), created.getName());
+        if (created == null) {
+            log.warn("Gmail returned no label for '{}' on mailbox {} — skipping local persist", labelName, mailbox.getEmailAddress());
+            return;
         }
+
+        Label saved = labelService.findByMailboxIdAndFullName(mailbox.getId(), created.getName())
+                .orElseGet(() -> labelService.save(Label.builder()
+                        .gmailMailboxId(mailbox.getId())
+                        .displayName(LabelNameUtils.extractDisplayName(created.getName()))
+                        .fullName(created.getName())
+                        .build()));
+
+        log.info("Persisted gmail label for {}: gmailId={} localId={} name='{}'", mailbox.getEmailAddress(), created.getId(), saved.getId(), created.getName());
     }
 }

@@ -33,11 +33,6 @@ public class GmailLabelFetchService {
 
     private final ConcurrentHashMap<String, ReentrantLock> mailboxLocks = new ConcurrentHashMap<>();
 
-    private static String extractDisplayName(String fullName) {
-        int lastSlash = fullName.lastIndexOf('/');
-        return lastSlash >= 0 ? fullName.substring(lastSlash + 1) : fullName;
-    }
-
     public Map<String, Object> fetchLabels(String mailboxAddress) {
 
         ReentrantLock lock = mailboxLocks.computeIfAbsent(mailboxAddress, k -> new ReentrantLock());
@@ -51,9 +46,9 @@ public class GmailLabelFetchService {
             Gmail gmail = gmailClientFactory.createUsingRefreshToken(mailbox.getRefreshToken());
             ListLabelsResponse response = gmailApiClient.listLabels(gmail);
 
-            if (response == null || response.getLabels() == null) {
-                log.warn("Label fetch for {}: Gmail returned null response", mailbox.getEmailAddress());
-                return Map.of("inbound", 0);
+            if (response == null || response.getLabels() == null || response.getLabels().isEmpty()) {
+                log.warn("Label fetch for {}: Gmail returned no labels — refusing to flush local rows", mailbox.getEmailAddress());
+                return Map.of("inbound", 0, "skipped", "empty-response");
             }
 
             Set<String> gmailLabelFullNames = response.getLabels().stream()
@@ -64,7 +59,7 @@ public class GmailLabelFetchService {
             List<Label> labels = gmailLabelFullNames.stream()
                     .map(fullName -> Label.builder()
                             .gmailMailboxId(mailbox.getId())
-                            .displayName(extractDisplayName(fullName))
+                            .displayName(LabelNameUtils.extractDisplayName(fullName))
                             .fullName(fullName)
                             .build())
                     .toList();

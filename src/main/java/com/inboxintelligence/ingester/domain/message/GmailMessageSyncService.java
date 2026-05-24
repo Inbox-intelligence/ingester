@@ -147,7 +147,8 @@ public class GmailMessageSyncService {
             Message message = gmailApiClient.fetchMessage(gmail, messageId);
             gmailMessageProcessingService.process(gmail, mailbox, message, EmailOrigin.PUB_SUB);
         } catch (Exception e) {
-            log.error("Failed to process message {} for mailbox {}", messageId, mailbox.getEmailAddress(), e);
+            log.error("Failed to process message {} for mailbox {} — aborting batch", messageId, mailbox.getEmailAddress(), e);
+            throw new RuntimeException("Failed to process message " + messageId + " for mailbox " + mailbox.getEmailAddress(), e);
         }
     }
 
