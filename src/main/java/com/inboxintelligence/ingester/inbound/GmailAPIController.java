@@ -1,9 +1,11 @@
 package com.inboxintelligence.ingester.inbound;
 
-import com.inboxintelligence.ingester.domain.GmailBackfillService;
-import com.inboxintelligence.ingester.domain.GmailLabelService;
-import com.inboxintelligence.ingester.domain.GmailOAuthLoginService;
-import com.inboxintelligence.ingester.domain.GmailTokenService;
+import com.inboxintelligence.ingester.domain.label.GmailApplyLabelService;
+import com.inboxintelligence.ingester.domain.label.GmailLabelFetchService;
+import com.inboxintelligence.ingester.domain.label.GmailLabelCreateService;
+import com.inboxintelligence.ingester.domain.message.GmailMessageBackfillService;
+import com.inboxintelligence.ingester.domain.setup.GmailCallbackService;
+import com.inboxintelligence.ingester.domain.setup.GmailLoginHelper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -20,10 +24,12 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 public class GmailAPIController {
 
-    private final GmailTokenService gmailTokenService;
-    private final GmailLabelService gmailLabelService;
-    private final GmailBackfillService gmailBackfillService;
-    private final GmailOAuthLoginService gmailOAuthLoginService;
+    private final GmailCallbackService gmailCallbackService;
+    private final GmailLabelFetchService gmailLabelFetchService;
+    private final GmailLabelCreateService gmailLabelCreateService;
+    private final GmailApplyLabelService gmailApplyLabelService;
+    private final GmailMessageBackfillService gmailMessageBackfillService;
+    private final GmailLoginHelper gmailLoginHelper;
 
     @GetMapping("/login")
     public void invokeOAuthRedirectURI(HttpServletResponse response) {
@@ -32,7 +38,7 @@ public class GmailAPIController {
 
         try {
 
-            String authUrl = gmailOAuthLoginService.invokeOAuthRedirectURI();
+            String authUrl = gmailLoginHelper.prepareOAuthRedirectURI();
             log.info("Generated Gmail Oauth Redirect URI");
             response.sendRedirect(authUrl);
 
@@ -45,7 +51,7 @@ public class GmailAPIController {
     public ResponseEntity<String> processTokenCallbackCode(@RequestParam String code) {
 
         log.info("Received Authorization Code");
-        gmailTokenService.processTokenCallbackCode(code);
+        gmailCallbackService.processTokenCallbackCode(code);
         return ResponseEntity.ok("Gmail account connected successfully");
     }
 
@@ -54,13 +60,35 @@ public class GmailAPIController {
             @RequestParam("mailboxAddress") String mailboxAddress,
             @RequestParam(value = "query", required = false, defaultValue = "") String query) {
 
-        CompletableFuture.runAsync(() -> gmailBackfillService.backfill(mailboxAddress, query));
+        CompletableFuture.runAsync(() -> gmailMessageBackfillService.backfill(mailboxAddress, query))
+                .exceptionally(ex -> {
+                    log.error("Backfill failed for mailboxAddress={} q='{}'", mailboxAddress, query, ex);
+                    return null;
+                });
         log.info("Backfill triggered for mailboxAddress={} q='{}'", mailboxAddress, query);
         return ResponseEntity.accepted().body(Map.of("triggered", true, "mailboxAddress", mailboxAddress, "q", query));
     }
 
     @PostMapping("/fetch-labels")
     public ResponseEntity<Map<String, Object>> fetchLabels(@RequestParam("mailboxAddress") String mailboxAddress) {
-        return ResponseEntity.ok(gmailLabelService.fetchLabels(mailboxAddress));
+        return ResponseEntity.ok(gmailLabelFetchService.fetchLabels(mailboxAddress));
+    }
+
+    @PostMapping("/labels")
+    public ResponseEntity<Boolean> createLabel(
+            @RequestParam("mailboxAddress") String mailboxAddress,
+            @RequestParam("labelName") String labelName) {
+        gmailLabelCreateService.createLabel(mailboxAddress, labelName);
+        return ResponseEntity.ok(true);
+    }
+
+    @PostMapping("/messages/labels")
+    public ResponseEntity<Map<String, Object>> applyLabelsToMessages(
+            @RequestParam("mailboxAddress") String mailboxAddress,
+            @RequestBody Map<String, List<String>> request) {
+        List<String> messageIds = request.getOrDefault("messageIds", Collections.emptyList());
+        List<String> addLabelIds = request.getOrDefault("addLabelIds", Collections.emptyList());
+        List<String> removeLabelIds = request.getOrDefault("removeLabelIds", Collections.emptyList());
+        return ResponseEntity.ok(gmailApplyLabelService.applyLabelsToMessages(mailboxAddress, messageIds, addLabelIds, removeLabelIds));
     }
 }

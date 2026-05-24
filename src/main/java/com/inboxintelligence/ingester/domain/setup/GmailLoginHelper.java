@@ -1,4 +1,4 @@
-package com.inboxintelligence.ingester.domain;
+package com.inboxintelligence.ingester.domain.setup;
 
 import com.inboxintelligence.ingester.config.GmailApiProperties;
 import lombok.RequiredArgsConstructor;
@@ -9,11 +9,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GmailOAuthLoginService {
+public class GmailLoginHelper {
 
     private final GmailApiProperties gmailApiProperties;
 
-    public String invokeOAuthRedirectURI() {
+    public String prepareOAuthRedirectURI() {
 
         log.debug("Building OAuth redirect URI for clientId={}", gmailApiProperties.clientId());
 

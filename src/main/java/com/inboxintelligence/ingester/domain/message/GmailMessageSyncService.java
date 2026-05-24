@@ -1,11 +1,10 @@
-package com.inboxintelligence.ingester.domain;
+package com.inboxintelligence.ingester.domain.message;
 
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.History;
 import com.google.api.services.gmail.model.HistoryMessageAdded;
 import com.google.api.services.gmail.model.ListHistoryResponse;
 import com.google.api.services.gmail.model.Message;
-import com.inboxintelligence.ingester.exception.MessageNotFoundException;
 import com.inboxintelligence.ingester.outbound.GmailApiClient;
 import com.inboxintelligence.ingester.outbound.GmailClientFactory;
 import com.inboxintelligence.persistence.model.EmailOrigin;
@@ -25,7 +24,7 @@ import java.util.concurrent.locks.ReentrantLock;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GmailSyncService {
+public class GmailMessageSyncService {
 
     private static final int MAX_SYNC_ITERATIONS = 50;
 
@@ -61,8 +60,6 @@ public class GmailSyncService {
             runSyncLoop(mailbox);
         } finally {
             lock.unlock();
-            mailboxLocks.remove(email, lock);
-            mailboxMaxHistory.remove(email);
         }
     }
 
@@ -148,9 +145,7 @@ public class GmailSyncService {
 
         try {
             Message message = gmailApiClient.fetchMessage(gmail, messageId);
-            gmailMessageProcessingService.process(gmail, mailbox.getId(), mailbox.getEmailAddress(), message, EmailOrigin.PUB_SUB);
-        } catch (MessageNotFoundException e) {
-            log.warn("Message {} no longer exists for {} — skipping", messageId, mailbox.getEmailAddress());
+            gmailMessageProcessingService.process(gmail, mailbox, message, EmailOrigin.PUB_SUB);
         } catch (Exception e) {
             log.error("Failed to process message {} for mailbox {}", messageId, mailbox.getEmailAddress(), e);
         }

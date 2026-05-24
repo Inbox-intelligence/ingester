@@ -52,7 +52,7 @@ gmail-api:
   client-secret: ${GOOGLE_CLIENT_SECRET}
   redirect-uri: ${GOOGLE_REDIRECT_URI}
   token-url: "https://oauth2.googleapis.com/token"
-  scope: "openid email https://www.googleapis.com/auth/gmail.readonly"
+  scope: "openid email https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.labels https://www.googleapis.com/auth/gmail.modify"
   pubsub-topic: ${GCP_PUBSUB_TOPIC}
   project-id: ${GCP_PROJECT_ID}
   pubsub-subscription-id: ${GCP_PUBSUB_SUBSCRIPTION_ID}

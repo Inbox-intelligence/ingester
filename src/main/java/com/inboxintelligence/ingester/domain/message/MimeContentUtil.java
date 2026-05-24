@@ -1,4 +1,4 @@
-package com.inboxintelligence.ingester.domain;
+package com.inboxintelligence.ingester.domain.message;
 
 import com.google.api.services.gmail.model.Message;
 import com.google.api.services.gmail.model.MessagePart;

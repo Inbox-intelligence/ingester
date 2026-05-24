@@ -1,9 +1,8 @@
-package com.inboxintelligence.ingester.domain;
+package com.inboxintelligence.ingester.domain.message;
 
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.ListMessagesResponse;
 import com.google.api.services.gmail.model.Message;
-import com.inboxintelligence.ingester.exception.MessageNotFoundException;
 import com.inboxintelligence.ingester.outbound.GmailApiClient;
 import com.inboxintelligence.ingester.outbound.GmailClientFactory;
 import com.inboxintelligence.persistence.model.EmailOrigin;
@@ -17,7 +16,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GmailBackfillService {
+public class GmailMessageBackfillService {
 
     private final GmailClientFactory gmailClientFactory;
     private final GmailApiClient gmailApiClient;
@@ -57,12 +56,9 @@ public class GmailBackfillService {
                 }
 
                 try {
-                    Message full = gmailApiClient.fetchMessage(gmail, stub.getId());
-                    gmailMessageProcessingService.process(gmail, mailbox.getId(), mailbox.getEmailAddress(), full, EmailOrigin.BACKFILL);
+                    Message message = gmailApiClient.fetchMessage(gmail, stub.getId());
+                    gmailMessageProcessingService.process(gmail, mailbox, message, EmailOrigin.BACKFILL);
                     processed++;
-                } catch (MessageNotFoundException e) {
-                    log.warn("Backfill: message {} no longer exists for {} — skipping", stub.getId(), mailbox.getEmailAddress());
-                    failed++;
                 } catch (Exception e) {
                     log.error("Backfill: failed to process message {} for mailbox {}: {}", stub.getId(), mailbox.getEmailAddress(), e.getMessage());
                     failed++;

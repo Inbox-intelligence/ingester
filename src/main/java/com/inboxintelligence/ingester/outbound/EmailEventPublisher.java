@@ -22,9 +22,12 @@ public class EmailEventPublisher {
 
     public void publishEmailProcessed(EmailContent emailContent) {
 
-        emailContentService.updateStatusAndNote(emailContent, PUBLISHED_FOR_SANITIZATION, null);
         EmailEvent event = new EmailEvent(emailContent.getId());
         rabbitTemplate.convertAndSend(queueProperties.exchange(), queueProperties.routingKey(), event);
+
+        emailContent.setProcessedStatus(PUBLISHED_FOR_SANITIZATION);
+        emailContentService.save(emailContent);
+
         log.info("Published email processed event: {}", event);
     }
 }

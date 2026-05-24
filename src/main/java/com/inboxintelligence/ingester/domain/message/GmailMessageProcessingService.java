@@ -1,4 +1,4 @@
-package com.inboxintelligence.ingester.domain;
+package com.inboxintelligence.ingester.domain.message;
 
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.Message;
@@ -10,6 +10,7 @@ import com.inboxintelligence.ingester.outbound.GmailApiClient;
 import com.inboxintelligence.persistence.model.EmailOrigin;
 import com.inboxintelligence.persistence.model.entity.EmailAttachment;
 import com.inboxintelligence.persistence.model.entity.EmailContent;
+import com.inboxintelligence.persistence.model.entity.GmailMailbox;
 import com.inboxintelligence.persistence.service.EmailAttachmentService;
 import com.inboxintelligence.persistence.service.EmailContentService;
 import com.inboxintelligence.persistence.storage.EmailStorageProvider;
@@ -37,9 +38,12 @@ public class GmailMessageProcessingService {
     private final EmailStorageProviderFactory storageProviderFactory;
     private final EmailEventPublisher emailEventPublisher;
 
-    public void process(Gmail gmail, Long mailboxId, String email, Message message, EmailOrigin origin) {
+    public void process(Gmail gmail, GmailMailbox mailbox, Message message, EmailOrigin origin) {
 
         EmailContent savedEmail = null;
+        Long mailboxId = mailbox.getId();
+        String email = mailbox.getEmailAddress();
+
         try {
             log.debug("Processing message {} for mailbox {}", message.getId(), mailboxId);
 
@@ -49,11 +53,12 @@ public class GmailMessageProcessingService {
             emailEventPublisher.publishEmailProcessed(savedEmail);
 
         } catch (Exception e) {
-            log.error("Failed to process message {} for mailbox {}", message.getId(), mailboxId, e);
             if (savedEmail != null) {
-                emailContentService.updateStatusAndNote(savedEmail, INGESTION_FAILED, e.getMessage());
+                savedEmail.setProcessedStatus(INGESTION_FAILED);
+                emailContentService.save(savedEmail);
             }
-            throw new RuntimeException(e);
+            log.error("Failed to process message {} for mailbox {}", message.getId(), mailboxId, e);
+            throw new RuntimeException("Failed to process message " + message.getId() + " for mailbox " + mailboxId, e);
         }
     }
 
@@ -90,17 +95,31 @@ public class GmailMessageProcessingService {
         EmailStorageProvider provider = storageProviderFactory.getProvider();
 
         try {
-            savedEmail.setBodyContentPath(provider.writeContent(email, messageId, "body.txt", MimeContentUtil.extractTextBody(messagePartPayload)));
-            savedEmail.setBodyHtmlContentPath(provider.writeContent(email, messageId, "body.html", MimeContentUtil.extractHtmlBody(messagePartPayload)));
+            String htmlBody = MimeContentUtil.extractHtmlBody(messagePartPayload);
+
+            if (StringUtils.hasText(htmlBody)) {
+                String path = provider.writeContent(email, messageId, "body.html", htmlBody);
+                savedEmail.setRawContentPath(path);
+                savedEmail.setRawContentType("HTML");
+            } else {
+                String textBody = MimeContentUtil.extractTextBody(messagePartPayload);
+                String path = provider.writeContent(email, messageId, "body.txt", textBody);
+                savedEmail.setRawContentPath(path);
+                savedEmail.setRawContentType("TEXT");
+            }
+
+            savedEmail.setProcessedStatus(CONTENT_SAVED);
+            emailContentService.save(savedEmail);
+            log.info("Content saved for message {}", messageId);
+
         } catch (Exception e) {
-            savedEmail.setRawMessagePath(provider.writeContent(email, messageId, "raw_message.json", message.toPrettyString()));
+            String path = provider.writeContent(email, messageId, "raw_message.json", message.toPrettyString());
+            savedEmail.setRawContentPath(path);
+            savedEmail.setRawContentType("RAW");
+            savedEmail.setProcessedStatus(INGESTION_FAILED);
+            emailContentService.save(savedEmail);
             throw e;
         }
-
-        savedEmail.setProcessedStatus(CONTENT_SAVED);
-        emailContentService.save(savedEmail);
-
-        log.info("Content saved for message {}", messageId);
     }
 
     private void saveEmailAttachment(Gmail gmail, String email, Message message, EmailContent savedEmail) {
@@ -172,11 +191,12 @@ public class GmailMessageProcessingService {
 
         if (part.getHeaders() != null) {
             for (MessagePartHeader header : part.getHeaders()) {
+                String value = header.getValue();
                 if ("Content-ID".equalsIgnoreCase(header.getName())) {
-                    contentId = header.getValue();
+                    contentId = value;
                 }
-                if ("Content-Disposition".equalsIgnoreCase(header.getName())) {
-                    isInline = header.getValue().toLowerCase().startsWith("inline");
+                if ("Content-Disposition".equalsIgnoreCase(header.getName()) && value != null) {
+                    isInline = value.toLowerCase().startsWith("inline");
                 }
             }
         }

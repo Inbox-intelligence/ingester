@@ -7,15 +7,16 @@ import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.PubsubMessage;
 import com.inboxintelligence.ingester.config.GmailApiProperties;
-import com.inboxintelligence.ingester.domain.GmailSyncService;
+import com.inboxintelligence.ingester.domain.message.GmailMessageSyncService;
 import com.inboxintelligence.ingester.model.GmailEvent;
 import com.inboxintelligence.persistence.model.entity.GmailMailbox;
 import com.inboxintelligence.persistence.service.GmailMailboxService;
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.io.FileInputStream;
@@ -34,13 +35,13 @@ import static com.inboxintelligence.persistence.model.SyncStatus.DISCONNECTED;
 public class GmailPubSubSubscriber {
 
     private final ObjectMapper objectMapper;
-    private final GmailSyncService gmailSyncService;
+    private final GmailMessageSyncService gmailMessageSyncService;
     private final GmailApiProperties gmailApiProperties;
     private final GmailMailboxService gmailMailboxService;
 
     private Subscriber subscriber;
 
-    @PostConstruct
+    @EventListener(ApplicationReadyEvent.class)
     public void start() throws IOException, TimeoutException {
 
         ProjectSubscriptionName projectSubscriptionName = ProjectSubscriptionName.of(gmailApiProperties.projectId(), gmailApiProperties.pubsubSubscriptionId());
@@ -86,7 +87,7 @@ public class GmailPubSubSubscriber {
             }
 
             gmailMailbox = gmailMailboxOptional.get();
-            gmailSyncService.triggerSyncJob(gmailMailbox, event.historyId());
+            gmailMessageSyncService.triggerSyncJob(gmailMailbox, event.historyId());
             consumer.ack();
 
         } catch (Exception e) {

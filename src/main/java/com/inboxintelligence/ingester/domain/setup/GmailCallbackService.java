@@ -1,4 +1,4 @@
-package com.inboxintelligence.ingester.domain;
+package com.inboxintelligence.ingester.domain.setup;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
@@ -20,7 +20,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GmailTokenService {
+public class GmailCallbackService {
 
     private final GmailApiProperties gmailApiProperties;
     private final GmailMailboxService gmailMailboxService;
@@ -78,9 +78,18 @@ public class GmailTokenService {
         GmailMailbox gmailMailbox = gmailMailboxService.findByEmailAddress(email).orElseGet(GmailMailbox::new);
         Instant accessTokenExpiresAt = Instant.now().plusSeconds(tokenResponse.getExpiresInSeconds());
 
+        String refreshToken = tokenResponse.getRefreshToken();
+        if (refreshToken == null) {
+            if (gmailMailbox.getRefreshToken() == null) {
+                throw new IllegalStateException("Google did not return a refresh_token and no existing one is stored for " + email + ". Revoke access in the Google account and retry.");
+            }
+            log.info("No new refresh_token returned for {} — keeping existing one", email);
+            refreshToken = gmailMailbox.getRefreshToken();
+        }
+
         gmailMailbox.setEmailAddress(email);
         gmailMailbox.setAccessToken(tokenResponse.getAccessToken());
-        gmailMailbox.setRefreshToken(tokenResponse.getRefreshToken());
+        gmailMailbox.setRefreshToken(refreshToken);
         gmailMailbox.setAccessTokenExpiresAt(accessTokenExpiresAt);
         gmailMailbox.setHistoryId(watchResponse.getHistoryId().longValue());
         gmailMailbox.setWatchExpiresAt(watchResponse.getExpiration());
