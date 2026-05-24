@@ -115,7 +115,7 @@ public class GmailMessageProcessingService {
         } catch (Exception e) {
             String path = provider.writeContent(email, messageId, "raw_message.json", message.toPrettyString());
             savedEmail.setRawContentPath(path);
-            savedEmail.setRawContentType("RAW");
+            savedEmail.setRawContentType("JSON");
             savedEmail.setProcessedStatus(INGESTION_FAILED);
             emailContentService.save(savedEmail);
             throw e;
