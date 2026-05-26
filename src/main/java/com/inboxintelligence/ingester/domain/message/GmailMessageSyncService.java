@@ -145,6 +145,10 @@ public class GmailMessageSyncService {
 
         try {
             Message message = gmailApiClient.fetchMessage(gmail, messageId);
+            if (message == null) {
+                log.info("Skipping vanished message {} for {}", messageId, mailbox.getEmailAddress());
+                return;
+            }
             gmailMessageProcessingService.process(gmail, mailbox, message, EmailOrigin.PUB_SUB);
         } catch (Exception e) {
             log.error("Failed to process message {} for mailbox {} — aborting batch", messageId, mailbox.getEmailAddress(), e);

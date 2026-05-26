@@ -45,6 +45,10 @@ public class GmailApiClient {
                     .setFormat("full")
                     .execute();
         } catch (GoogleJsonResponseException ex) {
+            if (ex.getStatusCode() == 404) {
+                log.warn("Gmail API: fetchMessage messageId={} not found (deleted/moved) — skipping", messageId);
+                return null;
+            }
             throw handleGoogleJsonException(ex, "fetchMessage");
         } catch (IOException e) {
             throw new RetryableGmailApiException("Retrying fetchMessage: " + e.getMessage(), e);
