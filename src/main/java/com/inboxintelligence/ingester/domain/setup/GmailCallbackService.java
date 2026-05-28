@@ -7,7 +7,7 @@ import com.google.api.services.gmail.model.WatchResponse;
 import com.inboxintelligence.ingester.config.GmailApiProperties;
 import com.inboxintelligence.ingester.outbound.GmailApiClient;
 import com.inboxintelligence.ingester.outbound.GmailClientFactory;
-import com.inboxintelligence.persistence.model.SyncStatus;
+import com.inboxintelligence.persistence.model.enums.SyncStatus;
 import com.inboxintelligence.persistence.model.entity.GmailMailbox;
 import com.inboxintelligence.persistence.service.GmailMailboxService;
 import lombok.RequiredArgsConstructor;

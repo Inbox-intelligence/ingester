@@ -5,7 +5,7 @@ import com.google.api.services.gmail.model.ListMessagesResponse;
 import com.google.api.services.gmail.model.Message;
 import com.inboxintelligence.ingester.outbound.GmailApiClient;
 import com.inboxintelligence.ingester.outbound.GmailClientFactory;
-import com.inboxintelligence.persistence.model.EmailOrigin;
+import com.inboxintelligence.persistence.model.enums.EmailOrigin;
 import com.inboxintelligence.persistence.model.entity.GmailMailbox;
 import com.inboxintelligence.persistence.service.EmailContentService;
 import com.inboxintelligence.persistence.service.GmailMailboxService;

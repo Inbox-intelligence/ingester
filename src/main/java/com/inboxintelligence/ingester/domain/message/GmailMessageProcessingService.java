@@ -7,7 +7,7 @@ import com.google.api.services.gmail.model.MessagePartBody;
 import com.google.api.services.gmail.model.MessagePartHeader;
 import com.inboxintelligence.ingester.outbound.EmailEventPublisher;
 import com.inboxintelligence.ingester.outbound.GmailApiClient;
-import com.inboxintelligence.persistence.model.EmailOrigin;
+import com.inboxintelligence.persistence.model.enums.EmailOrigin;
 import com.inboxintelligence.persistence.model.entity.EmailAttachment;
 import com.inboxintelligence.persistence.model.entity.EmailContent;
 import com.inboxintelligence.persistence.model.entity.GmailMailbox;
@@ -25,7 +25,7 @@ import java.time.Instant;
 import java.util.List;
 
 import static com.inboxintelligence.ingester.utils.Base64Util.decodeBase64Bytes;
-import static com.inboxintelligence.persistence.model.ProcessedStatus.*;
+import static com.inboxintelligence.persistence.model.enums.ProcessedStatus.*;
 
 @Slf4j
 @Service

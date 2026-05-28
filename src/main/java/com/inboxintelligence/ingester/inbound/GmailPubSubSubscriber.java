@@ -26,7 +26,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static com.inboxintelligence.persistence.model.SyncStatus.DISCONNECTED;
+import static com.inboxintelligence.persistence.model.enums.SyncStatus.DISCONNECTED;
 
 @Slf4j
 @Component
