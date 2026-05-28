@@ -48,7 +48,7 @@ public class GmailLabelFetchService {
 
             if (response == null || response.getLabels() == null || response.getLabels().isEmpty()) {
                 log.warn("Label fetch for {}: Gmail returned no labels — refusing to flush local rows", mailbox.getEmailAddress());
-                return Map.of("inbound", 0, "skipped", "empty-response");
+                return Map.of("success", false, "inbound", 0, "skipped", "empty-response");
             }
 
             Set<String> gmailLabelFullNames = response.getLabels().stream()
@@ -67,7 +67,7 @@ public class GmailLabelFetchService {
             labelService.flushAndFillLabels(mailbox.getId(), labels);
 
             log.info("Label fetch done for {}: count={}", mailbox.getEmailAddress(), labels.size());
-            return Map.of("inbound", labels.size());
+            return Map.of("success", true, "inbound", labels.size());
         } finally {
             lock.unlock();
         }
