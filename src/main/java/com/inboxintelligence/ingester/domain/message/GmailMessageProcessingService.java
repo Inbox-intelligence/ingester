@@ -83,7 +83,7 @@ public class GmailMessageProcessingService {
                 .build();
 
         EmailContent savedEmail = emailContentService.save(emailContent);
-        log.info("Email saved {}: {}", messageId, MimeContentUtil.getHeader(message, "Subject"));
+        log.debug("Email saved {}: {}", messageId, MimeContentUtil.getHeader(message, "Subject"));
         return savedEmail;
     }
 
@@ -110,7 +110,7 @@ public class GmailMessageProcessingService {
 
             savedEmail.setProcessedStatus(CONTENT_SAVED);
             emailContentService.save(savedEmail);
-            log.info("Content saved for message {}", messageId);
+            log.debug("Content saved for message {}", messageId);
 
         } catch (Exception e) {
             String path = provider.writeContent(email, messageId, "raw_message.json", message.toPrettyString());
@@ -135,7 +135,7 @@ public class GmailMessageProcessingService {
         savedEmail.setProcessedStatus(ATTACHMENT_SAVED);
         emailContentService.save(savedEmail);
 
-        log.info("Attachments saved for message {}", messageId);
+        log.debug("Attachments saved for message {}", messageId);
     }
 
     private void processAttachmentMessageParts(Gmail gmail, EmailContent savedEmail, String email, String messageId, MessagePart part) {
@@ -215,6 +215,6 @@ public class GmailMessageProcessingService {
                 .build();
 
         emailAttachmentService.save(attachment);
-        log.info("Attachment saved: '{}' ({}) for message {}", fileName, part.getMimeType(), savedEmail.getMessageId());
+        log.debug("Attachment saved: '{}' ({}) for message {}", fileName, part.getMimeType(), savedEmail.getMessageId());
     }
 }

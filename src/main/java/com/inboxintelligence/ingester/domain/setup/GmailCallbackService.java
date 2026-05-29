@@ -29,7 +29,7 @@ public class GmailCallbackService {
 
     public void processTokenCallbackCode(String authorizationCode) {
 
-        log.info("Processing Gmail OAuth callback");
+        log.debug("Processing Gmail OAuth callback");
 
         try {
 
@@ -48,7 +48,7 @@ public class GmailCallbackService {
 
     private String verifyAndExtractEmail(GoogleTokenResponse tokenResponse) throws Exception {
 
-        log.info("Verifying Google ID token");
+        log.debug("Verifying Google ID token");
         GoogleIdToken idToken = gmailClientFactory.createIdTokenVerifier().verify(tokenResponse.getIdToken());
 
         if (idToken == null) {
@@ -56,14 +56,14 @@ public class GmailCallbackService {
         }
 
         String email = idToken.getPayload().getEmail();
-        log.info("Authenticated Gmail user {}", email);
+        log.debug("Authenticated Gmail user {}", email);
 
         return email;
     }
 
     private WatchResponse startMailboxWatch(GoogleTokenResponse tokenResponse) {
 
-        log.info("Starting Gmail mailbox watch (Pub/Sub)");
+        log.debug("Starting Gmail mailbox watch (Pub/Sub)");
 
         Gmail gmail = gmailClientFactory.createUsingGoogleTokenResponse(tokenResponse);
         WatchResponse response = gmailApiClient.watchMailbox(gmail, gmailApiProperties.pubsubTopic(), List.of("INBOX"));
@@ -97,6 +97,6 @@ public class GmailCallbackService {
         gmailMailbox.setLastSyncError(null);
 
         gmailMailboxService.save(gmailMailbox);
-        log.info("Persisted Gmail mailbox entity for {}", email);
+        log.debug("Persisted Gmail mailbox entity for {}", email);
     }
 }

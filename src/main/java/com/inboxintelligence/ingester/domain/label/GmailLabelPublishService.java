@@ -37,7 +37,7 @@ public class GmailLabelPublishService {
                 .orElseThrow(() -> new IllegalArgumentException("Mailbox not found: " + mailboxAddress));
 
         List<Label> localLabels = labelService.findByMailboxId(mailbox.getId());
-        log.info("Publishing {} local labels to Gmail for {}", localLabels.size(), mailbox.getEmailAddress());
+        log.debug("Publishing {} local labels to Gmail for {}", localLabels.size(), mailbox.getEmailAddress());
 
         Gmail gmail = gmailClientFactory.createUsingRefreshToken(mailbox.getRefreshToken());
 
@@ -65,7 +65,7 @@ public class GmailLabelPublishService {
                     log.warn("Gmail returned null when creating label '{}' for {}", name, mailbox.getEmailAddress());
                 } else {
                     created++;
-                    log.info("Created gmail label '{}' for {}", name, mailbox.getEmailAddress());
+                    log.debug("Created gmail label '{}' for {}", name, mailbox.getEmailAddress());
                 }
             } catch (Exception e) {
                 failed++;
@@ -92,16 +92,16 @@ public class GmailLabelPublishService {
                 .orElseThrow(() -> new IllegalArgumentException("Mailbox not found: " + mailboxAddress));
 
         if (CollectionUtils.isEmpty(messageIds)) {
-            log.info("No message ids supplied for {} — nothing to label", mailbox.getEmailAddress());
+            log.debug("No message ids supplied for {} — nothing to label", mailbox.getEmailAddress());
             return Map.of("modified", 0);
         }
 
         if (CollectionUtils.isEmpty(addLabelIds) && CollectionUtils.isEmpty(removeLabelIds)) {
-            log.info("No add/remove label ids for {} — nothing to label", mailbox.getEmailAddress());
+            log.debug("No add/remove label ids for {} — nothing to label", mailbox.getEmailAddress());
             return Map.of("modified", 0);
         }
 
-        log.info("Labeling {} message(s) for {}: add={} remove={}", messageIds.size(), mailbox.getEmailAddress(), addLabelIds, removeLabelIds);
+        log.debug("Labeling {} message(s) for {}: add={} remove={}", messageIds.size(), mailbox.getEmailAddress(), addLabelIds, removeLabelIds);
 
         Gmail gmail = gmailClientFactory.createUsingRefreshToken(mailbox.getRefreshToken());
 
@@ -138,7 +138,7 @@ public class GmailLabelPublishService {
             try {
                 gmailApiClient.deleteLabel(gmail, label.getId());
                 deleted++;
-                log.info("Deleted gmail label id={} name='{}'", label.getId(), label.getName());
+                log.debug("Deleted gmail label id={} name='{}'", label.getId(), label.getName());
             } catch (Exception e) {
                 failed++;
                 log.warn("Failed deleting gmail label id={} name='{}': {}", label.getId(), label.getName(), e.getMessage());

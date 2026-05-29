@@ -47,7 +47,7 @@ public class GmailPubSubSubscriber {
         ProjectSubscriptionName projectSubscriptionName = ProjectSubscriptionName.of(gmailApiProperties.projectId(), gmailApiProperties.pubsubSubscriptionId());
 
         Path keyPath = Path.of(gmailApiProperties.serviceAccountKeyPath()).toAbsolutePath();
-        log.info("Loading GCP credentials from: {}", keyPath);
+        log.debug("Loading GCP credentials from: {}", keyPath);
         GoogleCredentials credentials;
         try (FileInputStream fis = new FileInputStream(keyPath.toFile())) {
             credentials = GoogleCredentials.fromStream(fis);
@@ -75,7 +75,7 @@ public class GmailPubSubSubscriber {
 
         try {
             String payload = message.getData().toStringUtf8();
-            log.info("Received Gmail Pub/Sub payload: {}", payload);
+            log.debug("Received Gmail Pub/Sub payload: {}", payload);
 
             GmailEvent event = objectMapper.readValue(payload, GmailEvent.class);
             Optional<GmailMailbox> gmailMailboxOptional = gmailMailboxService.findByEmailAddress(event.emailAddress());

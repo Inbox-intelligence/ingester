@@ -2,9 +2,11 @@ server:
   port: 8080
 
 spring:
-
   application:
     name: ingester
+
+  main:
+    banner-mode: off
 
   datasource:
     url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
@@ -61,3 +63,16 @@ gmail-api:
 email-storage-provider:
   name: ${EMAIL_STORAGE_PROVIDER_NAME}
   local-base-path: ${EMAIL_STORAGE_LOCAL_BASE_PATH}
+
+logging:
+  level:
+    root: WARN
+    com.inboxintelligence: INFO
+    com.inboxintelligence.ingester: INFO
+    org.springframework: WARN
+    org.springframework.amqp: WARN
+    org.springframework.boot: INFO
+    org.hibernate: WARN
+    com.zaxxer.hikari: WARN
+    org.apache.catalina: WARN
+    org.apache.tomcat: WARN

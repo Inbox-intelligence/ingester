@@ -73,7 +73,7 @@ public class GmailMessageSyncService {
             long latestEvent = mailboxMaxHistory.getOrDefault(email, lastSynced);
 
             if (lastSynced >= latestEvent) {
-                log.info("No new Gmail events {} {}", email, lastSynced);
+                log.debug("No new Gmail events {} {}", email, lastSynced);
                 return;
             }
 
@@ -85,7 +85,7 @@ public class GmailMessageSyncService {
 
     private void syncGmailMailbox(GmailMailbox mailbox) throws IOException {
 
-        log.info("Syncing mailbox {} from historyId {}", mailbox.getEmailAddress(), mailbox.getHistoryId());
+        log.debug("Syncing mailbox {} from historyId {}", mailbox.getEmailAddress(), mailbox.getHistoryId());
         Gmail gmail = gmailClientFactory.createUsingRefreshToken(mailbox.getRefreshToken());
         String pageToken = null;
         Long latestHistoryId = null;
@@ -162,7 +162,7 @@ public class GmailMessageSyncService {
             return;
         }
 
-        log.info("Updating historyId {} for {}", historyId, mailbox.getEmailAddress());
+        log.debug("Updating historyId {} for {}", historyId, mailbox.getEmailAddress());
 
         mailbox.setHistoryId(historyId);
         gmailMailboxService.save(mailbox);

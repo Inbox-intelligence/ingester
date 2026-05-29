@@ -26,7 +26,7 @@ public class GmailLabelCreateService {
         GmailMailbox mailbox = gmailMailboxService.findByEmailAddress(mailboxAddress)
                 .orElseThrow(() -> new IllegalArgumentException("Mailbox not found: " + mailboxAddress));
 
-        log.info("Creating gmail label '{}' for {}", labelName, mailbox.getEmailAddress());
+        log.debug("Creating gmail label '{}' for {}", labelName, mailbox.getEmailAddress());
 
         Gmail gmail = gmailClientFactory.createUsingRefreshToken(mailbox.getRefreshToken());
         com.google.api.services.gmail.model.Label created = gmailApiClient.createLabel(gmail, labelName);

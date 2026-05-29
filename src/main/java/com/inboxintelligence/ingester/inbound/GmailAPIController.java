@@ -34,12 +34,10 @@ public class GmailAPIController {
     @GetMapping("/login")
     public void invokeOAuthRedirectURI(HttpServletResponse response) {
 
-        log.info("Invoking oAuth Redirect URI");
-
         try {
 
             String authUrl = gmailLoginHelper.prepareOAuthRedirectURI();
-            log.info("Generated Gmail Oauth Redirect URI");
+            log.debug("Generated Gmail Oauth Redirect URI");
             response.sendRedirect(authUrl);
 
         } catch (IOException e) {
@@ -50,7 +48,7 @@ public class GmailAPIController {
     @GetMapping("/token-callback")
     public ResponseEntity<String> processTokenCallbackCode(@RequestParam String code) {
 
-        log.info("Received Authorization Code");
+        log.debug("Received Authorization Code");
         gmailCallbackService.processTokenCallbackCode(code);
         return ResponseEntity.ok("Gmail account connected successfully");
     }

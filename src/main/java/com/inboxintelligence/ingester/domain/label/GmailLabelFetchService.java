@@ -41,7 +41,7 @@ public class GmailLabelFetchService {
             GmailMailbox mailbox = gmailMailboxService.findByEmailAddress(mailboxAddress)
                     .orElseThrow(() -> new IllegalArgumentException("Mailbox not found: " + mailboxAddress));
 
-            log.info("Label fetch started for {}", mailbox.getEmailAddress());
+            log.debug("Label fetch started for {}", mailbox.getEmailAddress());
 
             Gmail gmail = gmailClientFactory.createUsingRefreshToken(mailbox.getRefreshToken());
             ListLabelsResponse response = gmailApiClient.listLabels(gmail);

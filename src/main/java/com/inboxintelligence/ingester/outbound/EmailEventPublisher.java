@@ -28,6 +28,6 @@ public class EmailEventPublisher {
         emailContent.setProcessedStatus(PUBLISHED_FOR_SANITIZATION);
         emailContentService.save(emailContent);
 
-        log.info("Published email processed event: {}", event);
+        log.debug("Published email processed event: {}", event);
     }
 }
