@@ -146,6 +146,23 @@ public class GmailApiClient {
         }
     }
 
+    @Retry(name = "gmailRetry")
+    public void deleteLabel(Gmail gmail, String labelId) {
+
+        log.debug("Gmail API: deleteLabel id='{}'", labelId);
+        try {
+            gmail.users().labels().delete("me", labelId).execute();
+        } catch (GoogleJsonResponseException ex) {
+            if (ex.getStatusCode() == 404) {
+                log.warn("Gmail label id='{}' already gone", labelId);
+                return;
+            }
+            throw handleGoogleJsonException(ex, "deleteLabel");
+        } catch (IOException e) {
+            throw new RetryableGmailApiException("Retrying deleteLabel: " + e.getMessage(), e);
+        }
+    }
+
     private Label findLabelByName(Gmail gmail, String labelName) {
         ListLabelsResponse response = listLabels(gmail);
         if (response == null || response.getLabels() == null) {

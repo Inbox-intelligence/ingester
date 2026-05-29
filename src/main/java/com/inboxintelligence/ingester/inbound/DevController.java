@@ -1,5 +1,6 @@
 package com.inboxintelligence.ingester.inbound;
 
+import com.inboxintelligence.ingester.domain.label.GmailLabelPublishService;
 import com.inboxintelligence.ingester.outbound.EmailEventPublisher;
 import com.inboxintelligence.persistence.model.entity.EmailContent;
 import com.inboxintelligence.persistence.service.EmailContentService;
@@ -8,9 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -20,6 +23,7 @@ public class DevController {
 
     private final EmailContentService emailContentService;
     private final EmailEventPublisher emailEventPublisher;
+    private final GmailLabelPublishService gmailLabelPublishService;
 
     @PostMapping("/republish-all")
     public ResponseEntity<String> republishAll() {
@@ -32,5 +36,10 @@ public class DevController {
         }
 
         return ResponseEntity.ok("Republished " + emails.size() + " emails to RabbitMQ");
+    }
+
+    @PostMapping("/delete-gmail-labels")
+    public ResponseEntity<Map<String, Object>> deleteAllGmailLabels(@RequestParam("mailboxAddress") String mailboxAddress) {
+        return ResponseEntity.ok(gmailLabelPublishService.deleteAllGmailLabels(mailboxAddress));
     }
 }

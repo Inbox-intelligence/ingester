@@ -1,6 +1,6 @@
 package com.inboxintelligence.ingester.inbound;
 
-import com.inboxintelligence.ingester.domain.label.GmailApplyLabelService;
+import com.inboxintelligence.ingester.domain.label.GmailLabelPublishService;
 import com.inboxintelligence.ingester.domain.label.GmailLabelFetchService;
 import com.inboxintelligence.ingester.domain.label.GmailLabelCreateService;
 import com.inboxintelligence.ingester.domain.message.GmailMessageBackfillService;
@@ -27,7 +27,7 @@ public class GmailAPIController {
     private final GmailCallbackService gmailCallbackService;
     private final GmailLabelFetchService gmailLabelFetchService;
     private final GmailLabelCreateService gmailLabelCreateService;
-    private final GmailApplyLabelService gmailApplyLabelService;
+    private final GmailLabelPublishService gmailLabelPublishService;
     private final GmailMessageBackfillService gmailMessageBackfillService;
     private final GmailLoginHelper gmailLoginHelper;
 
@@ -82,6 +82,11 @@ public class GmailAPIController {
         return ResponseEntity.ok(true);
     }
 
+    @PostMapping("/publish-labels")
+    public ResponseEntity<Map<String, Object>> publishLabels(@RequestParam("mailboxAddress") String mailboxAddress) {
+        return ResponseEntity.ok(gmailLabelPublishService.publishLabels(mailboxAddress));
+    }
+
     @PostMapping("/messages/labels")
     public ResponseEntity<Map<String, Object>> applyLabelsToMessages(
             @RequestParam("mailboxAddress") String mailboxAddress,
@@ -89,6 +94,6 @@ public class GmailAPIController {
         List<String> messageIds = request.getOrDefault("messageIds", Collections.emptyList());
         List<String> addLabelIds = request.getOrDefault("addLabelIds", Collections.emptyList());
         List<String> removeLabelIds = request.getOrDefault("removeLabelIds", Collections.emptyList());
-        return ResponseEntity.ok(gmailApplyLabelService.applyLabelsToMessages(mailboxAddress, messageIds, addLabelIds, removeLabelIds));
+        return ResponseEntity.ok(gmailLabelPublishService.applyLabelsToMessages(mailboxAddress, messageIds, addLabelIds, removeLabelIds));
     }
 }
