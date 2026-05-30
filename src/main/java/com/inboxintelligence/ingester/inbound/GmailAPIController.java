@@ -1,13 +1,11 @@
 package com.inboxintelligence.ingester.inbound;
 
-import com.inboxintelligence.ingester.domain.label.GmailImportanceService;
+import com.inboxintelligence.ingester.domain.label.GmailEnrichmentApplyService;
 import com.inboxintelligence.ingester.domain.label.GmailLabelPublishService;
 import com.inboxintelligence.ingester.domain.label.GmailLabelFetchService;
-import com.inboxintelligence.ingester.domain.label.GmailLabelCreateService;
 import com.inboxintelligence.ingester.domain.message.GmailMessageBackfillService;
 import com.inboxintelligence.ingester.domain.setup.GmailCallbackService;
 import com.inboxintelligence.ingester.domain.setup.GmailLoginHelper;
-import com.inboxintelligence.persistence.model.enums.Importance;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,9 +26,8 @@ public class GmailAPIController {
 
     private final GmailCallbackService gmailCallbackService;
     private final GmailLabelFetchService gmailLabelFetchService;
-    private final GmailLabelCreateService gmailLabelCreateService;
     private final GmailLabelPublishService gmailLabelPublishService;
-    private final GmailImportanceService gmailImportanceService;
+    private final GmailEnrichmentApplyService gmailEnrichmentApplyService;
     private final GmailMessageBackfillService gmailMessageBackfillService;
     private final GmailLoginHelper gmailLoginHelper;
 
@@ -75,42 +72,30 @@ public class GmailAPIController {
         return ResponseEntity.ok(gmailLabelFetchService.fetchLabels(mailboxAddress));
     }
 
-    @PostMapping("/labels")
-    public ResponseEntity<Boolean> createLabel(
-            @RequestParam("mailboxAddress") String mailboxAddress,
-            @RequestParam("labelName") String labelName) {
-        gmailLabelCreateService.createLabel(mailboxAddress, labelName);
-        return ResponseEntity.ok(true);
-    }
-
     @PostMapping("/publish-labels")
     public ResponseEntity<Map<String, Object>> publishLabels(@RequestParam("mailboxAddress") String mailboxAddress) {
         return ResponseEntity.ok(gmailLabelPublishService.publishLabels(mailboxAddress));
     }
 
+    // Generic label apply — used by taxonomy-engine to stamp cluster labels
+    // onto messages. Add-only: this project never removes labels.
     @PostMapping("/messages/labels")
     public ResponseEntity<Map<String, Object>> applyLabelsToMessages(
             @RequestParam("mailboxAddress") String mailboxAddress,
             @RequestBody Map<String, List<String>> request) {
         List<String> messageIds = request.getOrDefault("messageIds", Collections.emptyList());
         List<String> addLabelIds = request.getOrDefault("addLabelIds", Collections.emptyList());
-        List<String> removeLabelIds = request.getOrDefault("removeLabelIds", Collections.emptyList());
-        return ResponseEntity.ok(gmailLabelPublishService.applyLabelsToMessages(mailboxAddress, messageIds, addLabelIds, removeLabelIds));
+        return ResponseEntity.ok(gmailLabelPublishService.applyLabelsToMessages(mailboxAddress, messageIds, addLabelIds, List.of()));
     }
 
-    @PostMapping("/messages/importance")
-    public ResponseEntity<Map<String, Object>> applyImportance(@RequestBody ApplyImportanceRequest request) {
-        Map<String, Object> result = gmailImportanceService.applyImportance(
-                request.mailboxAddress(),
-                request.messageId(),
-                request.importance());
-        return ResponseEntity.ok(result);
-    }
-
-    public record ApplyImportanceRequest(
-            String mailboxAddress,
-            String messageId,
-            Importance importance
-    ) {
+    @PostMapping("/messages/enrichment")
+    public ResponseEntity<Map<String, Object>> applyEnrichment(
+            @RequestParam("mailboxAddress") String mailboxAddress,
+            @RequestBody Map<String, String> request) {
+        return ResponseEntity.ok(gmailEnrichmentApplyService.applyEnrichment(
+                mailboxAddress,
+                request.get("messageId"),
+                request.get("importance"),
+                request.get("category")));
     }
 }
