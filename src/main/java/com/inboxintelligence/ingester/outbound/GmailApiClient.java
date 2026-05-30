@@ -177,7 +177,7 @@ public class GmailApiClient {
     @Retry(name = "gmailRetry")
     public void batchModifyMessages(Gmail gmail, List<String> messageIds, List<String> addLabelIds, List<String> removeLabelIds) {
 
-        log.debug("Gmail API: batchModifyMessages messageCount={} add={} remove={}", messageIds.size(), addLabelIds, removeLabelIds);
+        log.info("Gmail API: batchModifyMessages messageCount={} add={} remove={}", messageIds.size(), addLabelIds, removeLabelIds);
         try {
             BatchModifyMessagesRequest request = new BatchModifyMessagesRequest()
                     .setIds(messageIds)
