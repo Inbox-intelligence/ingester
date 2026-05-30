@@ -1,11 +1,13 @@
 package com.inboxintelligence.ingester.inbound;
 
+import com.inboxintelligence.ingester.domain.label.GmailImportanceService;
 import com.inboxintelligence.ingester.domain.label.GmailLabelPublishService;
 import com.inboxintelligence.ingester.domain.label.GmailLabelFetchService;
 import com.inboxintelligence.ingester.domain.label.GmailLabelCreateService;
 import com.inboxintelligence.ingester.domain.message.GmailMessageBackfillService;
 import com.inboxintelligence.ingester.domain.setup.GmailCallbackService;
 import com.inboxintelligence.ingester.domain.setup.GmailLoginHelper;
+import com.inboxintelligence.persistence.model.enums.Importance;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,7 @@ public class GmailAPIController {
     private final GmailLabelFetchService gmailLabelFetchService;
     private final GmailLabelCreateService gmailLabelCreateService;
     private final GmailLabelPublishService gmailLabelPublishService;
+    private final GmailImportanceService gmailImportanceService;
     private final GmailMessageBackfillService gmailMessageBackfillService;
     private final GmailLoginHelper gmailLoginHelper;
 
@@ -93,5 +96,21 @@ public class GmailAPIController {
         List<String> addLabelIds = request.getOrDefault("addLabelIds", Collections.emptyList());
         List<String> removeLabelIds = request.getOrDefault("removeLabelIds", Collections.emptyList());
         return ResponseEntity.ok(gmailLabelPublishService.applyLabelsToMessages(mailboxAddress, messageIds, addLabelIds, removeLabelIds));
+    }
+
+    @PostMapping("/messages/importance")
+    public ResponseEntity<Map<String, Object>> applyImportance(@RequestBody ApplyImportanceRequest request) {
+        Map<String, Object> result = gmailImportanceService.applyImportance(
+                request.mailboxAddress(),
+                request.messageId(),
+                request.importance());
+        return ResponseEntity.ok(result);
+    }
+
+    public record ApplyImportanceRequest(
+            String mailboxAddress,
+            String messageId,
+            Importance importance
+    ) {
     }
 }

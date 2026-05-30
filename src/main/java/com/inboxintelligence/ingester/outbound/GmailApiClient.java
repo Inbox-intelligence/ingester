@@ -37,7 +37,7 @@ public class GmailApiClient {
     @Retry(name = "gmailRetry")
     public Message fetchMessage(Gmail gmail, String messageId) {
 
-        log.debug("Gmail API: fetchMessage messageId={}", messageId);
+        log.info("Gmail API: fetchMessage messageId={}", messageId);
         try {
             return gmail.users()
                     .messages()
