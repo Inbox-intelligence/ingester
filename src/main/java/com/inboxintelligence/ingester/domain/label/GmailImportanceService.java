@@ -32,8 +32,7 @@ public class GmailImportanceService {
             case LOW    -> List.of();
         };
 
-        log.info("Applying importance={} to {} message={} (labels={})",
-                importance, mailboxAddress, messageId, labelsToAdd);
+        log.debug("Applying importance={} to {} message={} (labels={})", importance, mailboxAddress, messageId, labelsToAdd);
 
         Map<String, Object> result = gmailLabelPublishService.applyLabelsToMessages(
                 mailboxAddress,

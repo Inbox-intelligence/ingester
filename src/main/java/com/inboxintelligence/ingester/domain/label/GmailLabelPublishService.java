@@ -113,7 +113,7 @@ public class GmailLabelPublishService {
             log.debug("Modified {}/{} message(s) for {}", modified, messageIds.size(), mailbox.getEmailAddress());
         }
 
-        log.info("Label apply done for {}: modified={}", mailbox.getEmailAddress(), modified);
+        log.debug("Label apply done for {}: modified={}", mailbox.getEmailAddress(), modified);
         return Map.of("modified", modified);
     }
 
