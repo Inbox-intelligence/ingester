@@ -42,20 +42,29 @@ public class GmailLabelPublishService {
         Gmail gmail = gmailClientFactory.createUsingRefreshToken(mailbox.getRefreshToken());
 
         ListLabelsResponse existing = gmailApiClient.listLabels(gmail);
-        Set<String> existingNames = (existing == null || existing.getLabels() == null)
-                ? Set.of()
+        Map<String, String> existingNameToId = (existing == null || existing.getLabels() == null)
+                ? Map.of()
                 : existing.getLabels().stream()
-                        .map(com.google.api.services.gmail.model.Label::getName)
-                        .collect(Collectors.toSet());
+                        .collect(Collectors.toMap(
+                                com.google.api.services.gmail.model.Label::getName,
+                                com.google.api.services.gmail.model.Label::getId,
+                                (a, b) -> a));
 
         int created = 0;
         int skipped = 0;
         int failed = 0;
+        int backfilled = 0;
 
         for (Label local : localLabels) {
             String name = local.getFullName();
-            if (existingNames.contains(name)) {
+
+            if (existingNameToId.containsKey(name)) {
                 skipped++;
+                if (!java.util.Objects.equals(local.getGmailLabelId(), existingNameToId.get(name))) {
+                    local.setGmailLabelId(existingNameToId.get(name));
+                    labelService.save(local);
+                    backfilled++;
+                }
                 continue;
             }
             try {
@@ -65,7 +74,9 @@ public class GmailLabelPublishService {
                     log.warn("Gmail returned null when creating label '{}' for {}", name, mailbox.getEmailAddress());
                 } else {
                     created++;
-                    log.debug("Created gmail label '{}' for {}", name, mailbox.getEmailAddress());
+                    local.setGmailLabelId(gmailLabel.getId());
+                    labelService.save(local);
+                    log.debug("Created gmail label [name='{}', gmailLabelId={}] for {}", name, gmailLabel.getId(), mailbox.getEmailAddress());
                 }
             } catch (Exception e) {
                 failed++;
@@ -73,11 +84,12 @@ public class GmailLabelPublishService {
             }
         }
 
-        log.info("Label publish done for {}: created={} skipped={} failed={}", mailbox.getEmailAddress(), created, skipped, failed);
+        log.info("Label publish done for {}: created={} skipped={} backfilled={} failed={}", mailbox.getEmailAddress(), created, skipped, backfilled, failed);
         return Map.of(
                 "success", failed == 0,
                 "created", created,
                 "skipped", skipped,
+                "backfilled", backfilled,
                 "failed", failed,
                 "total", localLabels.size()
         );

@@ -35,6 +35,10 @@ spring:
     email-event:
       exchange: ${RABBITMQ_EMAIL_EVENT_EXCHANGE}
       routing-key: ${RABBITMQ_EMAIL_SANITIZATION_ROUTING_KEY}
+    label-event:
+      exchange: ${RABBITMQ_LABEL_EVENT_EXCHANGE}
+      apply-queue: ${RABBITMQ_LABEL_APPLY_QUEUE}
+      apply-routing-key: ${RABBITMQ_LABEL_APPLY_ROUTING_KEY}
 
 resilience4j:
   retry:
